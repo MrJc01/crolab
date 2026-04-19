@@ -1,0 +1,15 @@
+=== RUN   TestFullCycleIntegration
+    e2e_flow_test.go:51: [Sucesso E2E]: O ciclo CLI -> Server -> CLI ocorreu nativamente.
+        >> Payload Resultante:
+        Deploying job from: /tmp/TestFullCycleIntegration3742571316/001
+        2026/04/18 21:26:51 Connecting to 127.0.0.1:4422, sending 165 bytes...
+        2026/04/18 21:26:51 Job Created: job-165 (Status: QUEUED)
+        --- REMOTE LOGS ---
+        Initializing...
+        Pulling image...
+        Running...
+        Done
+        --- JOB FINISHED ---
+--- PASS: TestFullCycleIntegration (1.10s)
+PASS
+ok  	github.com/crolab/core/tests/e2e	(cached)

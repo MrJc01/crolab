@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package crolab.v1;
+
+option go_package = "github.com/crolab/core/api/proto/v1";
+
+service CrolabService {
+  // Envia um job empacotado para o servidor
+  rpc SubmitJob (JobRequest) returns (JobResponse);
+  
+  // Abre stream com o container gerado
+  rpc StreamLogs (LogRequest) returns (stream LogMessage);
+}
+
+message JobRequest {
+  string image = 1;     // e.g. "python:3.11-alpine"
+  string command = 2;   // e.g. "python test.py"
+  bytes payload = 3;    // Zip File payload
+}
+
+message JobResponse {
+  string job_id = 1;
+  string status = 2;
+  string error_message = 3;
+}
+
+message LogRequest {
+  string job_id = 1;
+  // Permitir kill da operacao remotamente
+  bool abort = 2;
+}
+
+message LogMessage {
+  string content = 1;
+  bool is_error = 2;
+}

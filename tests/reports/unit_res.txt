@@ -1,0 +1,4 @@
+=== RUN   TestZipDirCreatesValidArchive
+--- PASS: TestZipDirCreatesValidArchive (0.01s)
+PASS
+ok  	github.com/crolab/core/tests/unit	(cached)

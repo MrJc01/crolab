@@ -1,0 +1,305 @@
+=== RUN   TestChaosLoopSRE
+    chaos_loop_test.go:54: SRE Stress Cycle -> [1/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [2/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [3/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [4/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [5/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [6/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [7/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [8/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [9/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [10/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [11/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [12/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [13/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [14/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [15/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [16/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [17/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [18/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [19/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [20/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [21/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [22/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [23/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [24/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [25/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [26/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [27/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [28/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [29/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [30/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [31/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [32/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [33/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [34/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [35/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [36/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [37/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [38/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [39/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [40/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [41/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [42/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [43/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [44/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [45/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [46/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [47/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:21 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [48/50]
+2026/04/18 21:27:21 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:22 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [49/50]
+2026/04/18 21:27:22 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:22 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:54: SRE Stress Cycle -> [50/50]
+2026/04/18 21:27:22 Connecting to 127.0.0.1:5599, sending 22 bytes...
+2026/04/18 21:27:22 Job Created: chaos (Status: QUEUED)
+--- REMOTE LOGS ---
+Chaos Test Log Output
+--- JOB FINISHED ---
+    chaos_loop_test.go:68: Todos os 50 ciclos de estresse completaram em tempo O(1) com sucesso no socket.
+--- PASS: TestChaosLoopSRE (0.79s)
+PASS
+ok  	github.com/crolab/core/tests/load	0.807s
