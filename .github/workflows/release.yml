@@ -1,0 +1,65 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Configurar ambiente Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22.x
+          
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          
+      - name: Baixar dependências
+        run: go mod download
+
+      - name: Compilação Cross-Platform
+        run: |
+          mkdir -p build
+          # Linux
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o build/crolab-linux-amd64 ./cmd/crolab
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o build/crolab-linux-arm64 ./cmd/crolab
+          
+          # MacOS
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o build/crolab-macos-amd64 ./cmd/crolab
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o build/crolab-macos-arm64 ./cmd/crolab
+          
+          # Windows
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o build/crolab-windows-amd64.exe ./cmd/crolab
+
+          # Zipar os pacotes contendo a UI junto com os binários
+          cd build
+          
+          # Estrutura padronizada (anexando os assets do /web)
+          cp -r ../web web_assets
+          
+          zip -r crolab-linux-amd64.zip crolab-linux-amd64 web_assets
+          zip -r crolab-linux-arm64.zip crolab-linux-arm64 web_assets
+          zip -r crolab-macos-amd64.zip crolab-macos-amd64 web_assets
+          zip -r crolab-macos-arm64.zip crolab-macos-arm64 web_assets
+          zip -r crolab-windows-amd64.zip crolab-windows-amd64.exe web_assets
+
+      - name: Lançar Github Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/crolab-linux-amd64.zip
+            build/crolab-linux-arm64.zip
+            build/crolab-macos-amd64.zip
+            build/crolab-macos-arm64.zip
+            build/crolab-windows-amd64.zip
+          fail_on_unmatched_files: true
+          generate_release_notes: true

@@ -1,0 +1,63 @@
+# Crolab Sustainable Use License (CSL)
+# Version 1.0 — Abril 2026
+
+Copyright (c) 2026 Crom / Crolab Contributors
+
+## Permissões
+
+Este software é disponibilizado sob os seguintes termos:
+
+### ✅ Uso Permitido (Sem Custo)
+
+1. **Uso Pessoal**: Você pode usar, copiar, modificar e distribuir o software para projetos pessoais sem qualquer restrição.
+
+2. **Uso Educacional**: Instituições de ensino, estudantes e pesquisadores podem usar o software livremente para fins acadêmicos e de aprendizado.
+
+3. **Uso Interno Empresarial**: Empresas podem usar o software para automatizar e gerenciar seus próprios recursos computacionais internos.
+
+4. **Consultoria e Serviços**: Você pode cobrar por serviços de consultoria, configuração, manutenção e suporte relacionados ao Crolab.
+
+5. **Contribuição**: Você pode modificar o código e submeter pull requests. Contribuições são bem-vindas.
+
+### ❌ Uso Restrito (Requer Licença Comercial)
+
+Os seguintes usos NÃO são permitidos sem uma licença comercial separada:
+
+1. **Crolab-como-Serviço (CaaS)**: Hospedar o Crolab e cobrar usuários pelo acesso (modelo SaaS).
+
+2. **Revenda**: Reempacotar, white-label ou revender o software como produto próprio.
+
+3. **Embedding Comercial**: Incorporar o Crolab como componente central de um produto comercial onde o valor principal derive substancialmente do Crolab.
+
+4. **Competição Direta**: Usar o código para criar um serviço que compete diretamente com os serviços oficiais da Crom.
+
+## Como Obter Licença Comercial
+
+Se seu caso de uso se enquadra nas restrições acima e você deseja usar o Crolab comercialmente:
+
+1. Entre em contato: **mrj.crom@gmail.com**
+2. Descreva seu caso de uso
+3. Receberá uma proposta de licença adaptada ao seu modelo de negócio
+
+## Resumo Rápido
+
+| Caso de Uso | Permitido? |
+|---|---|
+| Uso pessoal / hobby | ✅ Sim |
+| Estudo / universidade | ✅ Sim |
+| Automação interna da empresa | ✅ Sim |
+| Consultoria / setup para clientes | ✅ Sim |
+| Hospedar e cobrar pelo acesso | ❌ Precisa de licença |
+| Revender / white-label | ❌ Precisa de licença |
+| Incorporar em SaaS comercial | ❌ Precisa de licença |
+
+## Garantias
+
+O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA", SEM GARANTIAS DE QUALQUER NATUREZA, EXPRESSAS OU IMPLÍCITAS, INCLUINDO, MAS NÃO SE LIMITANDO ÀS GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM FIM PARTICULAR E NÃO-VIOLAÇÃO.
+
+EM NENHUMA HIPÓTESE OS AUTORES OU DETENTORES DOS DIREITOS AUTORAIS SERÃO RESPONSÁVEIS POR QUALQUER RECLAMAÇÃO, DANO OU OUTRA RESPONSABILIDADE.
+
+---
+
+Inspirado no modelo "Sustainable Use License" utilizado por projetos como n8n.
+Para dúvidas: mrj.crom@gmail.com

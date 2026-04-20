@@ -1,0 +1,44 @@
+# ==================================
+# CROLAB — Repositório Sanitizado
+# ==================================
+
+# Build / Compilados / Binários
+crolab
+crolab.exe
+test-bin
+bin/
+build/
+dist/
+
+# Relatórios de Teste (Gerados Dinamicamente)
+tests/reports/
+reports/
+
+# Python
+.pytest_cache/
+__pycache__/
+*.pyc
+
+# Golang / SQLite Database
+crolab.db
+crolab.db-journal
+crolab.db-shm
+crolab.db-wal
+
+# Ambiente / Config Local
+.crolab/
+
+# Logs
+server.log
+*.log
+
+# Node / NPM (SDK Frontend)
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
