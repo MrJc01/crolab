@@ -25,6 +25,7 @@
       <button class="nav-tab auth-only hidden" data-tab="plans" id="btn-tab-plans"><i data-lucide="gem"></i> Assinaturas</button>
       <button class="nav-tab auth-only hidden" data-tab="machines" id="btn-tab-machines"><i data-lucide="server"></i> Nodos (P2P)</button>
       <button class="nav-tab auth-only hidden" data-tab="jobs" id="btn-tab-jobs"><i data-lucide="cpu"></i> Execuções</button>
+      <button class="nav-tab auth-only hidden" data-tab="lab" id="btn-tab-lab"><i data-lucide="code"></i> Laboratório (IDE)</button>
       <button class="nav-tab auth-only hidden" data-tab="billing" id="btn-tab-billing"><i data-lucide="wallet"></i> Financeiro</button>
       <div style="flex:1"></div>
       <hr style="border:0; border-top: 1px solid var(--border); margin: 1rem 0" class="auth-only hidden">
@@ -158,6 +159,28 @@
           <thead><tr><th>Hash Identifier</th><th>Tenant Plan</th><th>Node Binding</th><th>Estado</th><th>Runtime (s)</th><th>Burn</th><th>Timestamp</th></tr></thead>
           <tbody id="jobs-tbody"></tbody>
         </table>
+      </section>
+
+      <!-- LAB (IDE) -->
+      <section id="lab-section" class="page hidden">
+        <div class="page-header">
+          <h1>Laboratório P2P (IDE/Notebooks)</h1>
+          <button class="btn-primary" onclick="window.open('http://localhost:19999', '_blank')"><i data-lucide="external-link" style="width: 16px; margin-right: 6px; display: inline-block; vertical-align: text-bottom;"></i> Fullscreen</button>
+        </div>
+        
+        <div class="glass-card" style="margin-bottom:1rem">
+          <h3>Navegação Dinâmica (Modo Local VS Nuvem)</h3>
+          <p style="color:var(--text-muted)">
+            <strong>Local (Colab Web Isolado):</strong> Ligue o daemon rodando no seu terminal na pasta do projeto: <code>crolab lab . --port :19999</code><br>
+            <strong>Modo Nuvem (Docker Deployment):</strong> Crolab processará as requisições, empacotará este diretório de trabalho e delegará a uma máquina alugada para execução dentro de um contêiner limpo:<br>
+          </p>
+          <div class="code-block" style="margin-top:0.75rem">
+            <code>crolab run . --image python:3.11 --machine [ID_ALVO] --cmd "python train.py"</code>
+          </div>
+        </div>
+        <div style="height: 65vh; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #1a1a2e">
+            <iframe src="http://localhost:19999" width="100%" height="100%" frameborder="0"></iframe>
+        </div>
       </section>
 
       <!-- BILLING -->

@@ -62,6 +62,15 @@ A API REST usa tokens Bearer no header `Authorization`:
 curl -H "Authorization: abc123token" http://localhost:8844/billing/status
 ```
 
+## Anti-Fraude e Pentest (Rate Limiting + IP Tracking)
+
+A infraestrutura Crolab bloqueia instâncias em loop que tentem abusar da concessão inicial de "Free Credits".
+- **Tracking Identitário (IP)**: Usuários recém registrados no DB `users` acoplam seu Header `RemoteAddr` (`X-Forwarded-For`).
+- O sistema varre `transactions` antigas pelo Helper `DBHasIPReceivedCredits`. Se a origem tentar drenar créditos (Airdrop) várias vezes disfarçado sob múltiplos e-mails, o bot atribuirá `$0.00` saldo base após a primeira.
+- **Resiliência a Brute Force**: Um *Token Bucket Nativo* estanca DDoS no endpoint de auth e `Bcrypt` exaustivo blindando a rota `POST /auth/login`.
+
+> **Suíte Crolab Nativa**: Execute `go test ./tests/security/...` para provar as barreiras (ZipSlip File Guard e Injeções em Banco de Dados).
+
 ## Recomendações de Produção
 
 1. **Sempre use `--tls-cert` e `--tls-key`** para habilitar o tunelamento criptografado no Control Plane e Data Plane. O tráfego sem TLS deve ser banido se operar fora de uma intranet local.

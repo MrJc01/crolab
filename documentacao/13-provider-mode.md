@@ -23,6 +23,15 @@ Você não precisa ler longos manuais para criar Senhas Mestras. A Engine faz is
 > [!TIP]
 > Caso queira abortar a orquestração de fundo, digite: `./crolab provider stop`. Isso finalizará processos amigavelmente. Esse modelo `-d` se expande também para o `./crolab web start -d`.
 
+### ⚡ Estratégia de Captação (Airdrop de Créditos)
+
+Quer atrair pesquisadores para a sua Provider Cloud inicial? Você pode modificar a bonificação do Gateway com:
+```bash
+./crolab provider start --free-credits 50.0
+# Ou exportando CROLAB_FREE_CREDITS="50.0"
+```
+A verificação anti-fraude via IP impossibilita o "farm de saldo" infinito pelas mesmas fontes de rede simultânea.
+
 ## Arbitragem e VastAI Sync
 
 Fomos radicais: A API P2P de Cloud foi ativada.
