@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Crolab Contributors. All rights reserved.
+// Licensed under the Crolab Sustainable License (CSL).
+// Contact: mrj.crom@gmail.com
 package cloud
 
 import (

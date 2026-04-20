@@ -294,10 +294,70 @@ body {
 }
 .lab-logo img { width: 28px; height: 28px; border-radius: 5px; }
 .lab-title-area { display: flex; flex-direction: column; }
-.lab-filename { font-size: 14px; font-weight: 600; color: #e8eaed; }
-.lab-menu { display: flex; gap: 0.8rem; font-size: 13px; color: #9aa0a6; margin-top: 2px; }
-.lab-menu span { cursor: pointer; }
-.lab-menu span:hover { color: #e8eaed; }
+.lab-filename-input {
+  font-family: var(--sys); font-size: 14px; font-weight: 500; color: #e8eaed;
+  background: transparent; border: 1px solid transparent; border-radius: 4px;
+  padding: 4px 6px; outline: none; margin-bottom: 2px; transition: 0.2s;
+  min-width: 200px;
+}
+.lab-filename-input:hover { border-color: rgba(255,255,255,0.2); }
+.lab-filename-input:focus { border-color: #8ab4f8; background: rgba(255,255,255,0.05); }
+
+.lab-menu {
+  display: flex; gap: 4px; font-family: var(--sys); font-size: 13px; color: #e8eaed; position: relative;
+}
+.lab-menu-item {
+  position: relative;
+}
+.lab-menu-item > span {
+  padding: 4px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; user-select: none;
+}
+.lab-menu-item > span:hover { background: rgba(255,255,255,0.1); }
+
+/* Glassmorphism Dropdown */
+.glass-dropdown {
+  background: rgba(30, 30, 30, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.5);
+  border-radius: 6px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+.glass-dropdown.hidden {
+  display: none !important;
+}
+.glass-dropdown a {
+  padding: 8px 16px;
+  color: #e8eaed;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 13px;
+  transition: background 0.1s;
+}
+.glass-dropdown a:hover {
+  background: #8ab4f8;
+  color: #202124;
+}
+.glass-dropdown i {
+  width: 14px;
+  height: 14px;
+}
+.menu-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  margin: 4px 0;
+}
 .lab-topbar-right {
   display: flex;
   align-items: center;
@@ -527,4 +587,24 @@ body {
   word-break: break-all;
   overflow-x: auto;
   max-width: calc(100% - 50px);
+}
+
+.lab-runtime-select {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e8eaed;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-family: var(--sys);
+  outline: none;
+  cursor: pointer;
+  margin-right: 12px;
+}
+.lab-runtime-select:focus {
+  border-color: #8ab4f8;
+}
+.lab-runtime-select option {
+  background: #202124;
+  color: #e8eaed;
 }

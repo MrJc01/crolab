@@ -220,12 +220,28 @@ func DBGetPasswordHash(email string) (string, error) {
 }
 
 func DBUpdateCredits(userID int, delta float64) (float64, error) {
+	var oldCredits float64
+	db.QueryRow("SELECT credits FROM users WHERE id = ?", userID).Scan(&oldCredits)
+
 	_, err := db.Exec("UPDATE users SET credits = credits + ? WHERE id = ?", delta, userID)
 	if err != nil {
 		return 0, err
 	}
+	
 	var credits float64
 	db.QueryRow("SELECT credits FROM users WHERE id = ?", userID).Scan(&credits)
+
+	// Webhook SRE: Créditos < Threshold ($1.00)
+	if oldCredits >= 1.0 && credits < 1.0 {
+		var email string
+		db.QueryRow("SELECT email FROM users WHERE id = ?", userID).Scan(&email)
+		SendWebhook("credits_low", map[string]interface{}{
+			"user_id": userID,
+			"email":   email,
+			"credits": credits,
+		})
+	}
+
 	return credits, nil
 }
 
@@ -609,7 +625,35 @@ func DBUpdateMachine(m DBMachine) error {
 }
 
 // --- Helpers ---
+func DBGetStats() map[string]interface{} {
+	stats := map[string]interface{}{
+		"total_users":    0,
+		"total_machines": 0,
+		"total_plans":    0,
+		"active_jobs":    0,
+		"total_revenue":  0.0,
+		"total_spread":   0.0,
+	}
 
+	db.QueryRow("SELECT COUNT(*) FROM users").Scan(&stats["total_users"])
+	db.QueryRow("SELECT COUNT(*) FROM machines").Scan(&stats["total_machines"])
+	db.QueryRow("SELECT COUNT(*) FROM plans").Scan(&stats["total_plans"])
+	db.QueryRow("SELECT COUNT(*) FROM jobs WHERE status = 'running'").Scan(&stats["active_jobs"])
+
+	// Revenue Calculation (Total Costs Charged to Users)
+	var rev float64
+	db.QueryRow("SELECT COALESCE(SUM(cost), 0.0) FROM jobs").Scan(&rev)
+	stats["total_revenue"] = rev
+
+	// Spread Calculation (Cost user paid - Cost Provider) -> Estimativa pelo preço da máquina se provider_cost hover.
+	// Precisaríamos join machines. Por simplicidade macro, the spread is 50% for vastai items.
+	// Custo Real VS Cobrado:
+	var spread float64
+	db.QueryRow("SELECT COALESCE(SUM(j.cost - (m.provider_cost_hr * (j.duration_s / 3600.0))), 0.0) FROM jobs j JOIN machines m ON j.machine_used = m.id WHERE j.status = 'finished'").Scan(&spread)
+	stats["total_spread"] = spread
+
+	return stats
+}
 func nowISO() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }

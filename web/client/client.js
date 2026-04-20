@@ -69,6 +69,10 @@ async function checkAuth() {
   document.getElementById('btn-show-auth').classList.add('hidden');
   document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
   
+  // Restore sidebar when authenticated
+  const sidebar = document.getElementById('client-sidebar');
+  if (sidebar) sidebar.style.display = 'flex';
+  
   const hash = window.location.hash.substring(1);
   if (hash && document.getElementById(hash + '-section')) {
     document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
@@ -101,6 +105,10 @@ function showLanding() {
   document.getElementById('btn-logout').classList.add('hidden');
   document.getElementById('btn-show-auth').classList.remove('hidden');
   document.querySelectorAll('.auth-only').forEach(el => el.classList.add('hidden'));
+  
+  // Hide sidebar entirely when not logged in
+  const sidebar = document.getElementById('client-sidebar');
+  if (sidebar) sidebar.style.display = 'none';
 }
 
 document.getElementById('btn-start-landing')?.addEventListener('click', () => {
@@ -344,52 +352,28 @@ document.getElementById('btn-save-config')?.addEventListener('click', async () =
 });
 
 // =============================================
-//  COLAB KERNEL ENGINE (Monaco + WebSocket)
+//  COLAB KERNEL ENGINE (Monaco + WebSocket + Multi-Cell)
 // =============================================
 
-let monacoEditor = null;
 let kernelWS = null;
+const cells = [];
+let notebookInitialized = false;
 
-function initMonacoEditor() {
-  const container = document.getElementById('monaco-container');
-  if (!container || monacoEditor) return;
+function updateRuntimeStatusUI(state) {
+  const dot = document.getElementById('lab-runtime-dot');
+  const txt = document.getElementById('lab-runtime-text');
+  if(!dot || !txt) return;
 
-  // Wait for Monaco to load from CDN
-  if (typeof monaco === 'undefined') {
-    setTimeout(initMonacoEditor, 300);
-    return;
+  if (state === 'connected') {
+      dot.style.background = '#34a853';
+      txt.textContent = 'Connected';
+  } else if (state === 'busy') {
+      dot.style.background = '#fbbc04';
+      txt.textContent = 'Busy';
+  } else {
+      dot.style.background = '#ea4335';
+      txt.textContent = 'Disconnected';
   }
-
-  monacoEditor = monaco.editor.create(container, {
-    value: '# Crolab Jupyter Engine — Escreva seu código aqui\nimport time\n\nfor i in range(5):\n    print(f"[Epoch {i+1}/5] Treinando modelo...")\n    time.sleep(0.3)\n\nprint("✅ Treinamento concluído!")\n',
-    language: 'python',
-    theme: 'vs-dark',
-    fontSize: 14,
-    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-    minimap: { enabled: false },
-    scrollBeyondLastLine: false,
-    automaticLayout: true,
-    padding: { top: 12, bottom: 12 },
-    lineNumbers: 'on',
-    renderLineHighlight: 'all',
-    cursorBlinking: 'smooth',
-    smoothScrolling: true,
-    wordWrap: 'on',
-    tabSize: 4,
-  });
-
-  // Ctrl+Enter shortcut to run
-  monacoEditor.addAction({
-    id: 'run-cell',
-    label: 'Run Cell',
-    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
-    run: () => runClientLabCell(),
-  });
-
-  // Watch for resize events to adapt layout
-  window.addEventListener('resize', () => {
-    if (monacoEditor) monacoEditor.layout();
-  });
 }
 
 function connectKernelWS() {
@@ -401,50 +385,60 @@ function connectKernelWS() {
   kernelWS = new WebSocket(url);
 
   kernelWS.onopen = () => {
-    appendOutput('[Kernel] Conexão WebSocket estabelecida ✓\n', '#0f0');
+    updateRuntimeStatusUI('connected');
   };
 
   kernelWS.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
+      const cellId = msg.cell_id;
+      if (!cellId) return;
+      
       switch (msg.type) {
         case 'stdout':
-          appendOutput(msg.data, '#0f0');
+          appendOutput(cellId, msg.data, '#0f0');
           break;
         case 'stderr':
-          appendOutput(msg.data, '#f55');
+          appendOutput(cellId, msg.data, '#f55');
           break;
         case 'status':
-          appendOutput(msg.data + '\n', '#888');
+          appendOutput(cellId, msg.data, '#9aa0a6');
+          if(msg.data.includes('Running')) updateRuntimeStatusUI('busy');
           break;
         case 'exit':
-          const color = msg.exit_code === 0 ? '#0f0' : '#f55';
-          appendOutput(`\n[Kernel] Processo finalizado (exit code: ${msg.exit_code})\n`, color);
+          const color = msg.exit_code === 0 ? '#34a853' : '#ea4335';
+          appendOutput(cellId, `\n[Kernel] Célula finalizada\n`, color);
+          const btn = document.getElementById(cellId === 'primary' ? 'btn-run-cell' : 'btn-run-' + cellId);
+          if (btn) btn.classList.remove('playing');
+          updateRuntimeStatusUI('connected');
           break;
         case 'error':
-          appendOutput(`[ERRO] ${msg.data}\n`, '#f55');
+          appendOutput(cellId, `[ERRO] ${msg.data}\n`, '#ea4335');
+          const btnErr = document.getElementById(cellId === 'primary' ? 'btn-run-cell' : 'btn-run-' + cellId);
+          if (btnErr) btnErr.classList.remove('playing');
+          updateRuntimeStatusUI('connected');
           break;
       }
     } catch (e) {
-      appendOutput(event.data + '\n', '#fff');
+      console.warn("Unhalde WS msg:", event.data);
     }
   };
 
   kernelWS.onclose = () => {
-    appendOutput('[Kernel] Conexão encerrada.\n', '#888');
     kernelWS = null;
+    updateRuntimeStatusUI('disconnected');
   };
 
   kernelWS.onerror = () => {
-    appendOutput('[Kernel] Erro na conexão WebSocket.\n', '#f55');
     kernelWS = null;
+    updateRuntimeStatusUI('disconnected');
   };
 
   return kernelWS;
 }
 
-function appendOutput(text, color = '#0f0') {
-  const el = document.getElementById('lab-output');
+function appendOutput(cellId, text, color = '#0f0') {
+  const el = document.getElementById(cellId === 'primary' ? 'lab-output' : 'out-' + cellId);
   if (!el) return;
 
   const span = document.createElement('span');
@@ -452,39 +446,37 @@ function appendOutput(text, color = '#0f0') {
   span.textContent = text;
   el.appendChild(span);
 
-  // Auto-scroll
   el.scrollTop = el.scrollHeight;
 }
 
-function runClientLabCell() {
-  if (!monacoEditor) { toast('Editor não inicializado'); return; }
+function runCell(cellId) {
   if (!TOKEN) { toast('Faça login primeiro'); return; }
+  
+  const cell = cells.find(c => c.id === cellId);
+  if (!cell || !cell.monacoInstance) { toast('Célula inválida'); return; }
 
-  const code = monacoEditor.getValue();
+  const code = cell.monacoInstance.getValue();
   if (!code.trim()) { toast('Célula vazia'); return; }
 
   // UI Updates
-  const btnShape = document.getElementById('btn-run-cell');
-  if(btnShape) btnShape.classList.add('playing');
+  const btnShape = document.getElementById(cellId === 'primary' ? 'btn-run-cell' : 'btn-run-' + cellId);
+  if (btnShape) btnShape.classList.add('playing');
   
   // Limpa output anterior
-  const outputEl = document.getElementById('lab-output');
-  outputEl.innerHTML = '';
-  appendOutput('[Kernel] Executando célula...\n', '#9aa0a6'); // gray status
+  const outputEl = document.getElementById(cellId === 'primary' ? 'lab-output' : 'out-' + cellId);
+  if (outputEl) {
+      outputEl.innerHTML = '';
+      appendOutput(cellId, '[Kernel] Executando célula...\n', '#9aa0a6');
+  }
 
   const ws = connectKernelWS();
 
-  // Escutar quando fechar para parar a animação
-  const origClose = ws.onclose;
-  ws.onclose = (ev) => {
-    if(btnShape) btnShape.classList.remove('playing');
-    if(origClose) origClose(ev);
-  };
-
   const sendCommand = () => {
+    const lang = document.getElementById('lab-runtime-select')?.value || 'python';
     ws.send(JSON.stringify({
-      cell_id: 'cell_' + Date.now(),
-      command: `python3 -c ${JSON.stringify(code)}`,
+      cell_id: cellId,
+      code: code,
+      language: lang
     }));
   };
 
@@ -495,12 +487,324 @@ function runClientLabCell() {
   }
 }
 
-// Hook: initialize Monaco when Lab tab is shown
+async function restartKernelUI() {
+  if (!TOKEN) return;
+  const lang = document.getElementById('lab-runtime-select')?.value || 'python';
+  
+  toast('Sinalizando o backend para reiniciar container SRE Docker...');
+  try {
+    const res = await POST('/client/lab/restart-kernel', { language: lang });
+    if(res.status === 200) {
+      toast('Kernel restartado!');
+    } else {
+      toast('Erro ao dar restart no Kernel SRE');
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function changeRuntimeLanguage() {
+  const lang = document.getElementById('lab-runtime-select')?.value || 'python';
+  toast(`Alternando Kernel Sandbox para: ${lang.toUpperCase()}`);
+  restartKernelUI();
+}
+
+// =============================================
+//  LAB UI MENUS (File, Edit, View, Runtime)
+// =============================================
+
+function toggleLabMenu(menuId) {
+    const target = document.getElementById(menuId);
+    const wasHidden = target.classList.contains('hidden');
+    
+    closeAllLabMenus();
+    
+    if (wasHidden) {
+        target.classList.remove('hidden');
+        lucide.createIcons(); // Garante q ícones renderizem
+    }
+}
+
+function closeAllLabMenus() {
+    const menus = document.querySelectorAll('.lab-dropdown');
+    menus.forEach(m => m.classList.add('hidden'));
+}
+
+// Fechar clicar fora
+window.addEventListener('click', function(e) {
+    if (!e.target.closest('.lab-menu-item')) {
+        closeAllLabMenus();
+    }
+});
+
+function toggleMonacoMinimap() {
+    cells.forEach(c => {
+        if (c.monacoInstance) {
+            const current = c.monacoInstance.getOption(monaco.editor.EditorOption.minimap).enabled;
+            c.monacoInstance.updateOptions({ minimap: { enabled: !current } });
+        }
+    });
+}
+
+function toggleOutput() {
+    const primaryOut = document.getElementById('lab-output');
+    if(primaryOut) primaryOut.classList.toggle('hidden');
+    
+    const cellOuts = document.querySelectorAll('.colab-cell-output-wrapper');
+    cellOuts.forEach(o => o.classList.toggle('hidden'));
+}
+
+function addCell(type = 'code', initialContent = '', forceId = null) {
+    const id = forceId || 'cell_' + Date.now() + Math.floor(Math.random() * 1000);
+    const cellIdx = cells.length;
+    
+    const cell = { id, type, content: initialContent, monacoInstance: null };
+    cells.push(cell);
+
+    const container = document.getElementById('lab-cells-container');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'colab-cell-wrapper';
+    wrapper.id = 'wrapper-' + id;
+
+    if (type === 'code') {
+        const runBtnId = id === 'primary' ? 'btn-run-cell' : 'btn-run-' + id;
+        const outId = id === 'primary' ? 'lab-output' : 'out-' + id;
+        
+        wrapper.innerHTML = `
+            <div class="cell-floating-actions">
+                <i data-lucide="arrow-up" onclick="moveCellUp('${id}')"></i>
+                <i data-lucide="arrow-down" onclick="moveCellDown('${id}')"></i>
+                <i data-lucide="trash-2" onclick="deleteCell('${id}')"></i>
+                <i data-lucide="more-vertical"></i>
+            </div>
+            <div class="colab-cell-main">
+                <div class="colab-cell-gutter">
+                    <div style="font-size: 11px; margin-top:2px; color: #5f6368;">[${cellIdx + 1}]</div>
+                    <div class="play-btn-circle" onclick="runCell('${id}')" id="${runBtnId}">
+                        <i data-lucide="play" fill="currentColor"></i>
+                    </div>
+                </div>
+                <div class="colab-cell-editor">
+                    <div id="monaco-${id}" class="colab-monaco-mount" style="min-height: 100px;"></div>
+                </div>
+            </div>
+            <div class="colab-cell-output-wrapper">
+                <div class="colab-output-gutter">
+                    <i data-lucide="corner-down-right" class="out-indicator"></i>
+                </div>
+                <div class="colab-output-content" id="${outId}"></div>
+            </div>
+        `;
+        container.appendChild(wrapper);
+
+        // Instanciação Monaco Editor para Code
+        if (typeof monaco !== 'undefined') {
+             cell.monacoInstance = monaco.editor.create(document.getElementById('monaco-' + id), {
+                value: initialContent,
+                language: 'python',
+                theme: 'vs-dark',
+                fontSize: 14,
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                padding: { top: 12, bottom: 12 },
+                lineNumbers: 'on',
+                renderLineHighlight: 'all',
+                cursorBlinking: 'smooth',
+                smoothScrolling: true,
+                wordWrap: 'on',
+                tabSize: 4,
+             });
+             cell.monacoInstance.addAction({
+                id: 'run-cell-' + id,
+                label: 'Run Cell',
+                keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+                run: () => runCell(id),
+             });
+             
+             // Backwards Compatibility for Tests & Global Ref
+             if (id === 'primary') {
+                 window.monacoEditor = cell.monacoInstance;
+             }
+        }
+    } else if (type === 'text') {
+         wrapper.innerHTML = `
+            <div class="cell-floating-actions">
+                <i data-lucide="arrow-up" onclick="moveCellUp('${id}')"></i>
+                <i data-lucide="arrow-down" onclick="moveCellDown('${id}')"></i>
+                <i data-lucide="trash-2" onclick="deleteCell('${id}')"></i>
+                <i data-lucide="more-vertical"></i>
+            </div>
+            <div class="colab-cell-main" style="border: 1px solid var(--border); padding:0; border-radius: 4px;">
+                <div class="colab-cell-editor" style="padding: 12px; width: 100%;">
+                    <div id="md-view-${id}" class="markdown-body" style="color: #e8eaed;" ondblclick="editMarkdown('${id}')"></div>
+                    <div id="monaco-md-${id}" class="colab-monaco-mount hidden" style="min-height: 80px;"></div>
+                </div>
+            </div>
+         `;
+         container.appendChild(wrapper);
+         
+         const mdView = document.getElementById('md-view-' + id);
+         mdView.innerHTML = (typeof marked !== 'undefined') ? marked.parse(initialContent || '*Duplo clique para editar texto (Markdown)*') : initialContent;
+         
+         if (typeof monaco !== 'undefined') {
+             cell.monacoInstance = monaco.editor.create(document.getElementById('monaco-md-' + id), {
+                value: initialContent,
+                language: 'markdown',
+                theme: 'vs-dark',
+                fontSize: 14,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                padding: { top: 8, bottom: 8 },
+                lineNumbers: 'off',
+                wordWrap: 'on',
+             });
+             
+             cell.monacoInstance.onDidBlurEditorText(() => {
+                 saveMarkdown(id);
+             });
+         }
+    }
+
+    if (window.lucide) lucide.createIcons();
+}
+
+function editMarkdown(id) {
+    const cell = cells.find(c => c.id === id);
+    if(!cell) return;
+    document.getElementById('md-view-' + id).classList.add('hidden');
+    document.getElementById('monaco-md-' + id).classList.remove('hidden');
+    if(cell.monacoInstance) cell.monacoInstance.focus();
+}
+
+function saveMarkdown(id) {
+    const cell = cells.find(c => c.id === id);
+    if(!cell) return;
+    const content = cell.monacoInstance.getValue();
+    cell.content = content;
+    
+    document.getElementById('monaco-md-' + id).classList.add('hidden');
+    const mdView = document.getElementById('md-view-' + id);
+    mdView.classList.remove('hidden');
+    
+    mdView.innerHTML = content.trim() ? ((typeof marked !== 'undefined') ? marked.parse(content) : content) : '*Duplo clique para editar*';
+}
+
+function deleteCell(id) {
+    const idx = cells.findIndex(c => c.id === id);
+    if (idx > -1) {
+        if (cells[idx].monacoInstance) cells[idx].monacoInstance.dispose();
+        cells.splice(idx, 1);
+        const el = document.getElementById('wrapper-' + id);
+        if(el) el.remove();
+        updateCellNumbers();
+    }
+}
+
+function moveCellUp(id) {
+    const idx = cells.findIndex(c => c.id === id);
+    if (idx > 0) {
+        const temp = cells[idx];
+        cells[idx] = cells[idx - 1];
+        cells[idx - 1] = temp;
+        reorderDOM();
+    }
+}
+
+function moveCellDown(id) {
+    const idx = cells.findIndex(c => c.id === id);
+    if (idx < cells.length - 1) {
+        const temp = cells[idx];
+        cells[idx] = cells[idx + 1];
+        cells[idx + 1] = temp;
+        reorderDOM();
+    }
+}
+
+function reorderDOM() {
+    const container = document.getElementById('lab-cells-container');
+    cells.forEach(c => {
+        const el = document.getElementById('wrapper-' + c.id);
+        if(el) container.appendChild(el);
+    });
+    updateCellNumbers();
+}
+
+function updateCellNumbers() {
+    let num = 1;
+    cells.forEach(c => {
+        if(c.type === 'code') {
+            const el = document.querySelector('#wrapper-' + c.id + ' .colab-cell-gutter > div:first-child');
+            if(el) el.textContent = '['+num+']';
+            num++;
+        }
+    });
+}
+
+function runAllCells() {
+    let codeCells = cells.filter(c => c.type === 'code');
+    if(codeCells.length === 0) return;
+    
+    let i = 0;
+    function runNext() {
+        if (i < codeCells.length) {
+            runCell(codeCells[i].id);
+            // In a pro engine, we'd wait for exit signal before firing next.
+            // Simplified version: wait 200ms and run async
+            i++;
+            setTimeout(runNext, 400); 
+        }
+    }
+    runNext();
+}
+
+function initNotebook() {
+    if (notebookInitialized) return;
+    const container = document.getElementById('lab-cells-container');
+    if (!container) return;
+    
+    // Wait for Monaco CDN
+    if (typeof monaco === 'undefined') {
+        setTimeout(initNotebook, 300);
+        return;
+    }
+    
+    notebookInitialized = true;
+    
+    const autosave = localStorage.getItem('crolab_autosave_nb');
+    if (autosave && confirm("Encontramos um notebook não salvo previamente. Deseja restaurá-lo?")) {
+        loadNotebook(autosave);
+    } else {
+        addCell('text', '## 👋 Bem-vindo ao Crolab Jupyter Engine!\n\nUse o painel para treinar IAs e executar código. Adicione **Code** ou **Text** pelo Toolbar.', 'cell-intro');
+        addCell('code', '# Crolab Jupyter Engine — Escreva seu código aqui\nimport time\n\nfor i in range(5):\n    print(f"[Epoch {i+1}/5] Treinando modelo...")\n    time.sleep(0.3)\n\nprint("✅ Treinamento concluído!")\n', 'primary');
+    }
+    
+    // Bind Toolbar
+    document.querySelectorAll('.notebook-toolbar-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const type = e.target.textContent.toLowerCase().includes('text') ? 'text' : 'code';
+            addCell(type);
+        });
+    });
+    
+    // Bind Add Bottom
+    const addBottom = document.querySelector('.add-cell-bottom-bar');
+    if(addBottom) {
+        addBottom.addEventListener('click', () => addCell('code'));
+    }
+}
+
+
+
+// Hook: initialize Notebook when Lab tab is shown
 const origShowPage = showPage;
 showPage = function(tab) {
   origShowPage(tab);
   if (tab === 'lab') {
-    setTimeout(initMonacoEditor, 200);
+    setTimeout(initNotebook, 200);
   }
 };
 
@@ -508,11 +812,126 @@ showPage = function(tab) {
 window.subscribePlan = subscribePlan;
 window.rentMachine = rentMachine;
 window.buyCredits = buyCredits;
-window.runClientLabCell = runClientLabCell;
+window.runCell = runCell;
 
 // Init
 if (window.lucide) lucide.createIcons();
 checkAuth();
+
+// =============================================
+//  NOTEBOOK PERSISTENCE (.ipynb & File API)
+// =============================================
+
+let currentFileHandle = null;
+
+function serializeNotebook() {
+    const notebook = {
+        cells: [],
+        metadata: {
+            language_info: { name: "python", version: "3" },
+            orig_nbformat: 4
+        },
+        nbformat: 4,
+        nbformat_minor: 2
+    };
+
+    cells.forEach(c => {
+        const source = c.monacoInstance ? c.monacoInstance.getValue() : c.content;
+        const cellInfo = {
+            cell_type: c.type === 'text' ? 'markdown' : 'code',
+            metadata: {},
+            source: source.split('\n').map((line, i, arr) => line + (i < arr.length - 1 ? '\n' : '')),
+        };
+        
+        if (c.type === 'code') {
+            cellInfo.execution_count = null;
+            cellInfo.outputs = []; 
+        }
+        
+        notebook.cells.push(cellInfo);
+    });
+
+    return JSON.stringify(notebook, null, 2);
+}
+
+function loadNotebook(ipynbContent) {
+    try {
+        const nb = JSON.parse(ipynbContent);
+        if (!nb || !nb.cells) throw new Error("Formato .ipynb inválido");
+        
+        // Limpa cells atuais
+        cells.forEach(c => {
+             if (c.monacoInstance) c.monacoInstance.dispose();
+             const el = document.getElementById('wrapper-' + c.id);
+             if (el) el.remove();
+        });
+        cells.length = 0; 
+        
+        nb.cells.forEach(cellObj => {
+            const type = cellObj.cell_type === 'markdown' ? 'text' : 'code';
+            const content = Array.isArray(cellObj.source) ? cellObj.source.join('') : cellObj.source;
+            addCell(type, content);
+        });
+        
+    } catch (e) {
+        toast("Erro ao carregar notebook: " + e.message);
+    }
+}
+
+async function saveNotebookLocal() {
+    const jsonStr = serializeNotebook();
+    
+    if (window.showSaveFilePicker) {
+        try {
+             if (!currentFileHandle) {
+                 currentFileHandle = await window.showSaveFilePicker({
+                     suggestedName: 'notebook.ipynb',
+                     types: [{ description: 'Jupyter Notebook', accept: { 'application/x-ipynb+json': ['.ipynb'] } }]
+                 });
+                 document.querySelector('.lab-filename').textContent = currentFileHandle.name + " - CroLab";
+             }
+             const writable = await currentFileHandle.createWritable();
+             await writable.write(jsonStr);
+             await writable.close();
+             toast("Salvo com sucesso!");
+        } catch (e) {
+             if (e.name !== 'AbortError') toast("Erro ao salvar: " + e.message);
+        }
+    } else {
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'notebook.ipynb';
+        a.click();
+        URL.revokeObjectURL(url);
+        toast("Download inicializado (Fallback).");
+    }
+}
+
+// Global Ctrl+S override e Auto-Save
+let autosaveTimer = null;
+
+window.addEventListener('keydown', (e) => {
+    // Ctrl+S
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        const labSection = document.getElementById('lab-section');
+        if (labSection && !labSection.classList.contains('hidden')) {
+             e.preventDefault();
+             saveNotebookLocal();
+        }
+    }
+    
+    // Auto-save debounce (30s)
+    const labSection = document.getElementById('lab-section');
+    if (labSection && !labSection.classList.contains('hidden')) {
+        clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(() => {
+            localStorage.setItem('crolab_autosave_nb', serializeNotebook());
+            console.log("[Auto-save] LocalStorage atualizado");
+        }, 30000);
+    }
+});
 
 // =============================================
 //  LOCAL FILE SYSTEM API (Colab Sidebar)
@@ -521,9 +940,8 @@ async function mountLocalDrive() {
   try {
     const dHandle = await window.showDirectoryPicker({ mode: 'read' });
     const tree = document.getElementById('lab-file-tree');
-    tree.innerHTML = ''; // clear mock
+    tree.innerHTML = ''; 
     
-    // Add root marker
     const root = document.createElement('div');
     root.className = 'lab-tree-item';
     root.innerHTML = `<i data-lucide="folder-open"></i> <strong>${dHandle.name}</strong>/`;
@@ -532,18 +950,40 @@ async function mountLocalDrive() {
     for await (const entry of dHandle.values()) {
       const item = document.createElement('div');
       item.className = 'lab-tree-item';
+      item.style.cursor = 'pointer';
       
       let icon = 'file';
       if (entry.kind === 'directory') icon = 'folder';
       else if (entry.name.endsWith('.py')) icon = 'file-code-2';
       else if (entry.name.endsWith('.md')) icon = 'book-text';
-      else if (entry.name.endsWith('.json')) icon = 'file-json-2';
+      else if (entry.name.endsWith('.json') || entry.name.endsWith('.ipynb')) icon = 'file-json-2';
 
       item.innerHTML = `<i data-lucide="${icon}"></i> ${entry.name}`;
+      
+      item.addEventListener('dblclick', async () => {
+          if (entry.kind === 'file') {
+              try {
+                  const file = await entry.getFile();
+                  const text = await file.text();
+                  if (entry.name.endsWith('.ipynb')) {
+                      currentFileHandle = entry;
+                      loadNotebook(text);
+                      const titleEl = document.querySelector('.lab-filename');
+                      if (titleEl) titleEl.textContent = entry.name + " - CroLab";
+                  } else if (entry.name.endsWith('.py') || entry.name.endsWith('.md')) {
+                      const type = entry.name.endsWith('.md') ? 'text' : 'code';
+                      addCell(type, text);
+                  }
+              } catch (e) {
+                  toast("Falha ao abrir o arquivo.");
+              }
+          }
+      });
+
       tree.appendChild(item);
     }
     lucide.createIcons();
-    toast('Drive local montado com sucesso.');
+    toast('Drive local montado. (Dê duplo clique num .ipynb para abrir)');
   } catch (err) {
     if (err.name !== 'AbortError') {
       toast('Erro ao acessar pasta local: ' + err.message);

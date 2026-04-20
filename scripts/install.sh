@@ -1,28 +1,28 @@
 #!/bin/bash
-# scripts/install.sh - Script público de instalação do Crolab
+# Crolab SRE Deployment Script - v1.0
+# curl -sSL https://crolab.crom.run/install | bash
 
 set -e
 
-echo "🚀 Iniciando instalação do Crolab (P2P GPU Orchestrator)..."
+echo "=========================================="
+echo "⚡ Crolab P2P Orchestrator Installer ⚡"
+echo "=========================================="
 
-OS=$(uname -s | tr A-Z a-z)
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
+case $ARCH in
+    x86_64) ARCH="amd64" ;;
+    aarch64|arm64) ARCH="arm64" ;;
+    *) echo "Arquitetura não suportada: $ARCH"; exit 1 ;;
+esac
 
-if [ "$ARCH" = "x86_64" ]; then
-    ARCH="amd64"
-elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "aarch64" ]; then
-    ARCH="arm64"
-fi
+echo "Baixando release Crolab para $OS-$ARCH..."
+DOWNLOAD_URL="https://github.com/crolab/core/releases/latest/download/crolab-${OS}-${ARCH}"
+# wget/curl simulado aqui
+curl -fsSL -o /tmp/crolab "$DOWNLOAD_URL" || { echo "Falha ao baixar do GitHub releases"; exit 1; }
 
-VERSION="0.2.0"
-BINARY_URL="https://github.com/crolab/core/releases/download/v${VERSION}/crolab-${OS}-${ARCH}"
-
-echo "⬇️  Baixando Crolab v${VERSION} para ${OS}/${ARCH}..."
-curl -sL $BINARY_URL -o /tmp/crolab
-
-echo "📦 Instalando em /usr/local/bin..."
+chmod +x /tmp/crolab
 sudo mv /tmp/crolab /usr/local/bin/crolab
-sudo chmod +x /usr/local/bin/crolab
 
-echo "✅ Sucesso! O Crolab foi instalado."
-echo "➡️  Rode 'crolab help' para começar."
+echo "✅ Crolab instalado com sucesso em /usr/local/bin"
+echo "   Inicie o Provider Node com: crolab provider start"

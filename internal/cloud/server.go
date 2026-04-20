@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -195,6 +196,19 @@ type statusWriter struct {
 func (w *statusWriter) WriteHeader(s int) {
 	w.status = s
 	w.ResponseWriter.WriteHeader(s)
+}
+
+func (w *statusWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if hj, ok := w.ResponseWriter.(http.Hijacker); ok {
+		return hj.Hijack()
+	}
+	return nil, nil, fmt.Errorf("http.Hijacker not implemented by underlying response writer")
+}
+
+func (w *statusWriter) Flush() {
+	if fl, ok := w.ResponseWriter.(http.Flusher); ok {
+		fl.Flush()
+	}
 }
 
 // =============================================
@@ -1163,6 +1177,7 @@ func BuildMux(webDir string) http.Handler {
 	
 	// Phase 1 MVP Kernel (Local Host Engine)
 	mux.Handle("/client/lab/exec", websocket.Handler(handleKernelExecWS))
+	mux.HandleFunc("/client/lab/restart-kernel", handleKernelRestart)
 	
 	// Tensors P2P (Chunked Streaming API)
 	mux.HandleFunc("/tensors/upload", handleTensorUpload)
@@ -1319,7 +1334,45 @@ func handleTensorDownload(w http.ResponseWriter, r *http.Request) {
 //  KERNEL / JUPYTER MVP
 // =============================================
 
+const pythonKernelProxy = `
+import sys, json, traceback
+
+env = {'__name__': '__main__'}
+
+class StreamProxy:
+    def __init__(self, name):
+        self.name = name
+        self.real = sys.__stdout__
+    def write(self, data):
+        if data:
+            self.real.write(json.dumps({"stream": self.name, "data": data, "cell_id": env.get('__CELL_ID__', '')}) + "\n")
+            self.real.flush()
+    def flush(self): pass
+
+sys.stdout = StreamProxy("stdout")
+sys.stderr = StreamProxy("stderr")
+
+for line in sys.__stdin__:
+    try:
+        req = json.loads(line)
+        cell_id = req.get("cell_id", "")
+        env['__CELL_ID__'] = cell_id
+        sys.__stdout__.write(json.dumps({"status": "start", "cell_id": cell_id}) + "\n")
+        sys.__stdout__.flush()
+        try:
+            exec(req.get("code", ""), env)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
+        finally:
+            sys.__stdout__.write(json.dumps({"status": "end", "cell_id": cell_id}) + "\n")
+            sys.__stdout__.flush()
+    except Exception:
+        pass
+`
+
 func handleKernelExecWS(ws *websocket.Conn) {
+	defer ws.Close()
+
 	// 1. Auth check from Query String
 	token := ws.Request().URL.Query().Get("token")
 	user, err := DBGetUserByToken(token)
@@ -1328,65 +1381,139 @@ func handleKernelExecWS(ws *websocket.Conn) {
 		return
 	}
 
-	var msg struct {
-		CellID  string `json:"cell_id"`
-		Command string `json:"command"`
+	sessionID := fmt.Sprintf("user_%d", user.ID)
+
+	// 2. Determinar linguagem (default: python). Pode mudar em runtime via msg.Language.
+	currentLang := "python"
+
+	// 3. Tenta local direto (sem Docker) como fallback robusto
+	cwd, _ := os.Getwd()
+	cmd := exec.Command("python3", "-u", "-c", pythonKernelProxy)
+	cmd.Dir = cwd
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return
 	}
 
-	// Permite múltiplos comandos por sessão (Interativo)
+	if err := cmd.Start(); err != nil {
+		websocket.JSON.Send(ws, map[string]interface{}{"type": "error", "data": "Falha ao iniciar kernel: " + err.Error()})
+		return
+	}
+
+	defer func() {
+		stdin.Close()
+		cmd.Process.Kill()
+		cmd.Wait()
+	}()
+
+	// Leitura assíncrona do Kernel
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			line := scanner.Text()
+			var msg map[string]interface{}
+			if err := json.Unmarshal([]byte(line), &msg); err == nil {
+				if stream, ok := msg["stream"]; ok {
+					websocket.JSON.Send(ws, map[string]interface{}{
+						"type":    stream,
+						"data":    msg["data"],
+						"cell_id": msg["cell_id"],
+					})
+				} else if status, ok := msg["status"]; ok {
+					if status == "end" {
+						websocket.JSON.Send(ws, map[string]interface{}{
+							"type":      "exit",
+							"exit_code": 0,
+							"cell_id":   msg["cell_id"],
+						})
+					} else if status == "start" {
+						websocket.JSON.Send(ws, map[string]interface{}{
+							"type":    "status",
+							"data":    "[Kernel] Running...\n",
+							"cell_id": msg["cell_id"],
+						})
+					}
+				}
+			}
+		}
+	}()
+
+	var req msgKernel
 	for {
-		if err := websocket.JSON.Receive(ws, &msg); err != nil {
+		if err := websocket.JSON.Receive(ws, &req); err != nil {
 			break
 		}
 
-		websocket.JSON.Send(ws, map[string]interface{}{
-			"type": "status", "data": fmt.Sprintf("[Kernel] Executando Célula %s...", msg.CellID),
-			"cell_id": msg.CellID,
-		})
+		// Suporte a runtime switch
+		if req.Language != "" && req.Language != currentLang {
+			currentLang = req.Language
+			log.Printf("[Kernel] Runtime switch: %s -> %s (sessão %s)", currentLang, req.Language, sessionID)
+		}
 
-		cwd, _ := os.Getwd()
-		cmd := exec.Command("bash", "-c", msg.Command)
-		cmd.Dir = cwd
+		code := req.Code
+		if code == "" && req.Command != "" {
+			code = req.Command
+			if strings.HasPrefix(code, "python3 -c ") {
+				code = code[11:]
+			}
+		}
 
-		stdout, _ := cmd.StdoutPipe()
-		stderr, _ := cmd.StderrPipe()
-
-		if err := cmd.Start(); err != nil {
-			websocket.JSON.Send(ws, map[string]interface{}{"type": "error", "data": err.Error(), "cell_id": msg.CellID})
+		// Handle restart command
+		if req.Code == "__RESTART_KERNEL__" {
+			RestartKernel(sessionID, currentLang)
+			websocket.JSON.Send(ws, map[string]interface{}{
+				"type": "status",
+				"data": "[Kernel] Reiniciado com sucesso.\n",
+			})
 			continue
 		}
 
-		var wg sync.WaitGroup
-		stream := func(r *bufio.Scanner, streamType string) {
-			defer wg.Done()
-			for r.Scan() {
-				websocket.JSON.Send(ws, map[string]interface{}{
-					"type": streamType,
-					"data": r.Text() + "\n",
-					"cell_id": msg.CellID,
-				})
-			}
-		}
-
-		wg.Add(2)
-		go stream(bufio.NewScanner(stdout), "stdout")
-		go stream(bufio.NewScanner(stderr), "stderr")
-		wg.Wait()
-
-		err := cmd.Wait()
-		exitCode := 0
-		if err != nil {
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				exitCode = exitErr.ExitCode()
-			} else {
-				exitCode = -1
-			}
-		}
-
-		websocket.JSON.Send(ws, map[string]interface{}{
-			"type":      "exit",
-			"exit_code": exitCode,
-			"cell_id":   msg.CellID,
+		reqPayload, _ := json.Marshal(map[string]string{
+			"cell_id": req.CellID,
+			"code":    code,
 		})
+		stdin.Write(reqPayload)
+		stdin.Write([]byte("\n"))
 	}
 }
+
+// handleKernelRestart — endpoint HTTP para restart do kernel
+func handleKernelRestart(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		jsonError(w, 405, "POST only")
+		return
+	}
+	user := requireAuth(w, r)
+	if user == nil {
+		return
+	}
+
+	var body struct {
+		Language string `json:"language"`
+	}
+	json.NewDecoder(r.Body).Decode(&body)
+	if body.Language == "" {
+		body.Language = "python"
+	}
+
+	sessionID := fmt.Sprintf("user_%d", user.ID)
+	RestartKernel(sessionID, body.Language)
+
+	jsonResponse(w, 200, map[string]string{
+		"status":  "ok",
+		"message": "Kernel reiniciado",
+	})
+}
+
+type msgKernel struct {
+	CellID   string `json:"cell_id"`
+	Code     string `json:"code"`
+	Language string `json:"language"`
+	Command  string `json:"command"` // Legacy
+}
+

@@ -163,9 +163,11 @@ Flags:
       --cmd string       Comando a executar (default "ls /workspace")
   -h, --help             help for run
       --image string     Imagem Docker (default "python:3.11-slim")
+      --json             Cuspir o resultado estruturado em stdOut JSON puro
       --machine string   ID (ou Nome) da máquina específica
       --plan string      ID do Plano para Cloud routing (ex: start, pro)
       --tls-rpc          Usa TLS para conexão gRPC P2P
+      --watch            Hot-reload (reinicia reexecutando se o projeto/arquivo mudar localmente)
 
 ```
 ```text

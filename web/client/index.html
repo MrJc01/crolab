@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="client.css">
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
@@ -170,16 +171,53 @@
                 <i data-lucide="menu" id="btn-toggle-main-sidebar" style="color:#9aa0a6; cursor:pointer;" class="lab-hamburger"></i>
                 <div class="lab-logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#fbbc04"/><path d="M14 8L10 16" stroke="#1f1f1f" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="8" r="1.5" fill="#1f1f1f"/><circle cx="14" cy="16" r="1.5" fill="#1f1f1f"/></svg></div>
                 <div class="lab-title-area">
-                    <div class="lab-filename">app_core.ipynb - CroLab</div>
-                    <div class="lab-menu">
-                        <span>File</span><span>Edit</span><span>View</span><span>Insert</span><span>Runtime</span><span>Tools</span><span>Help</span>
+                    <input type="text" id="lab-filename-input" class="lab-filename-input" value="app_core.ipynb" onblur="saveNotebookLocal()" />
+                    <div class="lab-menu" id="lab-menubar">
+                        <div class="lab-menu-item">
+                            <span onclick="toggleLabMenu('menu-file')">File</span>
+                            <div id="menu-file" class="lab-dropdown glass-dropdown hidden">
+                                <a onclick="addCell('code'); closeAllLabMenus()"><i data-lucide="file-plus"></i> New Cell</a>
+                                <a onclick="saveNotebookLocal(); closeAllLabMenus()"><i data-lucide="save"></i> Save (.ipynb)</a>
+                                <div class="menu-divider"></div>
+                                <a onclick="toast('Em breve'); closeAllLabMenus()"><i data-lucide="download"></i> Download as .py</a>
+                            </div>
+                        </div>
+                        <div class="lab-menu-item">
+                            <span onclick="toggleLabMenu('menu-edit')">Edit</span>
+                            <div id="menu-edit" class="lab-dropdown glass-dropdown hidden">
+                                <a onclick="document.execCommand('undo'); closeAllLabMenus()"><i data-lucide="undo"></i> Undo</a>
+                                <a onclick="document.execCommand('redo'); closeAllLabMenus()"><i data-lucide="redo"></i> Redo</a>
+                                <div class="menu-divider"></div>
+                                <a onclick="deleteCell('primary'); closeAllLabMenus()"><i data-lucide="trash"></i> Clear Selected</a>
+                            </div>
+                        </div>
+                        <div class="lab-menu-item">
+                            <span onclick="toggleLabMenu('menu-view')">View</span>
+                            <div id="menu-view" class="lab-dropdown glass-dropdown hidden">
+                                <a onclick="toggleMonacoMinimap(); closeAllLabMenus()"><i data-lucide="minimize-2"></i> Toggle Minimap</a>
+                                <a onclick="toggleOutput(); closeAllLabMenus()"><i data-lucide="eye-off"></i> Toggle Output</a>
+                            </div>
+                        </div>
+                        <div class="lab-menu-item">
+                            <span onclick="toggleLabMenu('menu-runtime')">Runtime</span>
+                            <div id="menu-runtime" class="lab-dropdown glass-dropdown hidden">
+                                <a onclick="runAllCells(); closeAllLabMenus()"><i data-lucide="play-circle"></i> Run All</a>
+                                <div class="menu-divider"></div>
+                                <a onclick="restartKernelUI(); closeAllLabMenus()"><i data-lucide="rotate-cw"></i> Restart Kernel</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="lab-topbar-right">
-                <div class="lab-runtime-status">
-                    <div class="lab-runtime-dot"></div>
-                    Connected (GPU T4 High-RAM, Python 3)
+                <select id="lab-runtime-select" class="lab-runtime-select" onchange="changeRuntimeLanguage()">
+                    <option value="python">Python 3 (Sandbox)</option>
+                    <option value="node">Node.js 20 (Sandbox)</option>
+                    <option value="bash">Bash Terminal</option>
+                </select>
+                <div class="lab-runtime-status" onclick="restartKernelUI()" style="cursor: pointer; position: relative;">
+                    <div class="lab-runtime-dot" id="lab-runtime-dot"></div>
+                    <span id="lab-runtime-text">Connected</span>
                 </div>
                 <button class="btn-primary" style="padding: 6px 16px; border-radius: 20px; font-size: 13px;">Share</button>
             </div>
@@ -224,35 +262,11 @@
                         <button class="notebook-toolbar-btn"><i data-lucide="plus" style="width:14px;height:14px"></i> Text</button>
                     </div>
 
-                    <!-- Single Interactive Cell -->
-                    <div class="colab-cell-wrapper" id="primary-cell">
-                        <div class="cell-floating-actions">
-                            <i data-lucide="arrow-up"></i>
-                            <i data-lucide="arrow-down"></i>
-                            <i data-lucide="link"></i>
-                            <i data-lucide="message-square"></i>
-                            <i data-lucide="trash-2"></i>
-                            <i data-lucide="more-vertical"></i>
-                        </div>
-
-                        <div class="colab-cell-main">
-                            <div class="colab-cell-gutter">
-                                <div class="play-btn-circle" onclick="runClientLabCell()" id="btn-run-cell">
-                                    <i data-lucide="play" fill="currentColor"></i>
-                                </div>
-                            </div>
-                            <div class="colab-cell-editor">
-                                <!-- Monaco injects here -->
-                                <div id="monaco-container" class="colab-monaco-mount"></div>
-                            </div>
-                        </div>
-
-                        <div class="colab-cell-output-wrapper">
-                            <div class="colab-output-gutter">
-                                <i data-lucide="corner-down-right" class="out-indicator"></i>
-                            </div>
-                            <div class="colab-output-content" id="lab-output"></div>
-                        </div>
+                    <!-- Container Dinâmico Multicelular -->
+                    <div id="lab-cells-container"></div>
+                    
+                    <div class="add-cell-bottom-bar" style="display:flex; justify-content:center; padding: 20px 0; opacity: 0.5; transition: opacity 0.2s; cursor: pointer;">
+                        <span style="font-size: 13px; color: var(--text-muted);"><i data-lucide="plus" style="width:14px; height: 14px; display:inline-block; vertical-align:middle;"></i> Hover to add cell</span>
                     </div>
 
                 </div>

@@ -36,6 +36,8 @@ var (
 	runCmd_    string
 	runPlan    string
 	runMachine string
+	runWatch   bool
+	runJson    bool
 )
 
 var runCmd = &cobra.Command{
@@ -47,8 +49,16 @@ var runCmd = &cobra.Command{
 		cfg, _ := cli.LoadConfig()
 
 		if runPlan == "" && runMachine == "" {
-			fmt.Fprintln(os.Stderr, "Erro: você deve especificar --plan ou --machine")
-			os.Exit(1)
+			err := cli.RunLocalProject(targetDir, runWatch, runJson)
+			if err != nil {
+				if runJson {
+					fmt.Fprintf(os.Stderr, "{\"status\": \"error\", \"error\": \"%s\"}\n", err.Error())
+				} else {
+					fmt.Fprintf(os.Stderr, "❌ Erro local: %v\n", err)
+				}
+				os.Exit(1)
+			}
+			return
 		}
 
 		if cfg.CloudToken == "" {
@@ -225,6 +235,8 @@ func init() {
 	runCmd.Flags().StringVar(&runPlan, "plan", "", "ID do Plano para Cloud routing (ex: start, pro)")
 	runCmd.Flags().StringVar(&runMachine, "machine", "", "ID (ou Nome) da máquina específica")
 	runCmd.Flags().BoolVar(&runTls, "tls-rpc", false, "Usa TLS para conexão gRPC P2P")
+	runCmd.Flags().BoolVar(&runWatch, "watch", false, "Hot-reload (reinicia reexecutando se o projeto/arquivo mudar localmente)")
+	runCmd.Flags().BoolVar(&runJson, "json", false, "Cuspir o resultado estruturado em stdOut JSON puro")
 
 	configAddCmd.Flags().StringVar(&cfgProvider, "provider", "local", "Provedor (local, vastai, runpod, aws...)")
 	configAddCmd.Flags().IntVar(&cfgPriority, "priority", 1, "Prioridade (1 = mais alta)")
