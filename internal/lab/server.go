@@ -148,20 +148,26 @@ func handleSetDir(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := os.Stat(abs)
+	cleanSafe, err := safePath(abs)
+	if err != nil {
+		http.Error(w, err.Error(), 403)
+		return
+	}
+
+	info, err := os.Stat(cleanSafe)
 	if err != nil || !info.IsDir() {
-		http.Error(w, "diretório não encontrado: "+abs, 404)
+		http.Error(w, "diretório não encontrado: "+cleanSafe, 404)
 		return
 	}
 
 	basePathMu.Lock()
-	basePath = abs
+	basePath = cleanSafe
 	basePathMu.Unlock()
 
-	log.Printf("📂 Lab workspace → %s", abs)
+	log.Printf("📂 Lab workspace → %s", cleanSafe)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"path": abs})
+	json.NewEncoder(w).Encode(map[string]string{"path": cleanSafe})
 }
 
 func handleGetDir(w http.ResponseWriter, r *http.Request) {

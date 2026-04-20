@@ -53,8 +53,9 @@ func migrate() error {
 			email      TEXT    UNIQUE NOT NULL,
 			password   TEXT    NOT NULL,
 			token      TEXT    UNIQUE NOT NULL,
-			credits    REAL    DEFAULT 10.0,
+			credits    REAL    DEFAULT 0.0,
 			role       TEXT    DEFAULT 'client',
+			signup_ip  TEXT    DEFAULT '',
 			created_at TEXT    DEFAULT (datetime('now'))
 		)`,
 		`CREATE TABLE IF NOT EXISTS plans (
@@ -170,7 +171,7 @@ type DBUser struct {
 	CreatedAt string
 }
 
-func DBCreateUser(email, password, role string) (*DBUser, error) {
+func DBCreateUser(email, password, role, ip string) (*DBUser, error) {
 	hash, err := HashPassword(password)
 	if err != nil {
 		return nil, err
@@ -178,8 +179,8 @@ func DBCreateUser(email, password, role string) (*DBUser, error) {
 	token := GenerateToken()
 
 	_, err = db.Exec(
-		"INSERT INTO users (email, password, token, role) VALUES (?, ?, ?, ?)",
-		email, hash, token, role,
+		"INSERT INTO users (email, password, token, role, signup_ip, credits) VALUES (?, ?, ?, ?, ?, 0.0)",
+		email, hash, token, role, ip,
 	)
 	if err != nil {
 		return nil, err
@@ -226,6 +227,17 @@ func DBUpdateCredits(userID int, delta float64) (float64, error) {
 	var credits float64
 	db.QueryRow("SELECT credits FROM users WHERE id = ?", userID).Scan(&credits)
 	return credits, nil
+}
+
+func DBHasIPReceivedCredits(ip string) bool {
+	if ip == "" {
+		return false // Segurança: Não é possível dar drop global vazio
+	}
+	var count int
+	// Checa quantos IPs idênticos já ganharam crédito ou inseridos no banco.
+	// Como alteramos o default para 0.0 agora, basta saber se um IP obteve um insert anterior e já validou.
+	db.QueryRow("SELECT count(*) FROM transactions t JOIN users u ON t.user_id = u.id WHERE u.signup_ip = ? AND t.type = 'welcome'", ip).Scan(&count)
+	return count > 0 // True se este IP real já emitiu o Airdrop
 }
 
 func DBUserCount() int {

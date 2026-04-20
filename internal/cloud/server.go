@@ -221,7 +221,16 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		role = "admin"
 	}
 
-	user, err := DBCreateUser(body.Email, body.Password, role)
+	ip := r.RemoteAddr
+	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+		ip = strings.Split(fwd, ",")[0]
+	}
+	if strings.Contains(ip, ":") {
+		ip = strings.Split(ip, ":")[0]
+	}
+	ip = strings.TrimSpace(ip)
+
+	user, err := DBCreateUser(body.Email, body.Password, role, ip)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			jsonError(w, 409, "email já registrado")
@@ -231,13 +240,27 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	DBLogTransaction(user.ID, 10.0, "welcome", "Créditos de boas-vindas")
+	freeCreditsStr := DBGetSetting("free_credits_amount")
+	freeCredits := 10.0
+	if freeCreditsStr != "" {
+		freeCredits, _ = strconv.ParseFloat(freeCreditsStr, 64)
+	}
+
+	if freeCredits > 0 {
+		if !DBHasIPReceivedCredits(ip) {
+			DBUpdateCredits(user.ID, freeCredits)
+			DBLogTransaction(user.ID, freeCredits, "welcome", fmt.Sprintf("Airdrop Bônus (Verificado via IP)"))
+			log.Printf("☁️  Airdrop concedido para ip: %s", ip)
+		} else {
+			log.Printf("☁️  Airdrop ignorado: IP %s bloqueado no limite de Free-Credits por endereço.", ip)
+		}
+	}
 	log.Printf("☁️  Novo usuário: %s (role: %s)", body.Email, role)
 
 	jsonResponse(w, 201, map[string]interface{}{
 		"token":   user.Token,
 		"role":    user.Role,
-		"message": "Conta criada. 10 créditos de boas-vindas.",
+		"message": fmt.Sprintf("Conta criada. Confirmações de IP checadas e saldo configurado."),
 	})
 }
 
