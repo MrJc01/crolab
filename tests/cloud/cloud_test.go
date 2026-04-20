@@ -42,7 +42,7 @@ func post(url string, body map[string]interface{}) (*http.Response, map[string]i
 	b, _ := json.Marshal(body)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(b))
 	if err != nil {
-		return nil, nil
+		return &http.Response{StatusCode: 503}, map[string]interface{}{"error": err.Error()}
 	}
 	data, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -58,7 +58,7 @@ func get(url string, token string) (*http.Response, map[string]interface{}) {
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, nil
+		return &http.Response{StatusCode: 503}, map[string]interface{}{"error": err.Error()}
 	}
 	data, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -80,7 +80,7 @@ func authReq(method, url, token string, body interface{}) (*http.Response, map[s
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, nil
+		return &http.Response{StatusCode: 503}, map[string]interface{}{"error": err.Error()}
 	}
 	data, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()

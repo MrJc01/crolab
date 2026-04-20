@@ -48,19 +48,20 @@ func TestPoolFailoverCascade(t *testing.T) {
 	tmpDir := t.TempDir()
 	homeDir := t.TempDir()
 
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Port bind failed: %v", err)
+	}
+	defer lis.Close()
+	dynamicPort := lis.Addr().String()
+
 	os.MkdirAll(homeDir+"/.crolab", 0755)
 	os.WriteFile(homeDir+"/.crolab/config.yaml", []byte(`
 cloud_token: "mock-token-123"
-cloud_api: "http://127.0.0.1:8844"
+cloud_api: "http://`+dynamicPort+`"
 `), 0644)
 
 	env := append(os.Environ(), "HOME="+homeDir, "CROLAB_HOME="+homeDir)
-
-	lis, err := net.Listen("tcp", "127.0.0.1:8844")
-	if err != nil {
-		t.Fatalf("Port 8844 bind failed: %v", err)
-	}
-	defer lis.Close()
 
 	mockCloud := http.Server{
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
