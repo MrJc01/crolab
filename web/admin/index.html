@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crolab Admin — Painel de Controle</title>
+<meta name="description" content="Painel administrativo para gerenciar planos, pools de prioridade, máquinas e usuários do Crolab.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <nav id="admin-nav">
+    <div class="nav-brand">
+      <span class="brand-icon">⚡</span>
+      <span class="brand-text">Crolab <span class="brand-badge">Admin</span></span>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="dashboard" id="btn-tab-dashboard">📊 Dashboard</button>
+      <button class="nav-tab" data-tab="plans" id="btn-tab-plans">📋 Planos</button>
+      <button class="nav-tab" data-tab="machines" id="btn-tab-machines">🖥️ Máquinas</button>
+      <button class="nav-tab" data-tab="users" id="btn-tab-users">👤 Usuários</button>
+      <button class="nav-tab" data-tab="providers" id="btn-tab-providers">☁️ Nuvem / Sync</button>
+      <button class="nav-tab" data-tab="logs" id="btn-tab-logs">📜 Logs</button>
+    </div>
+    <div class="nav-user">
+      <span id="admin-email">admin</span>
+      <button id="btn-logout" class="btn-text">Sair</button>
+    </div>
+  </nav>
+
+  <!-- LOGIN -->
+  <section id="login-section" class="section-center">
+    <div class="glass-card login-card">
+      <h1>🔐 Admin Login</h1>
+      <input type="email" id="login-email" placeholder="Email" autocomplete="email">
+      <input type="password" id="login-password" placeholder="Senha" autocomplete="current-password">
+      <button id="btn-login" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Entrar</button>
+      <p id="login-error" class="error-text"></p>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard-section" class="page hidden">
+    <div class="page-header">
+      <h1>Dashboard <button id="btn-refresh-dash" class="btn" style="font-size: 0.9rem; padding: 4px 10px;">Atualizar</button></h1>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card glass-card">
+        <div class="metric-value" id="m-users">—</div>
+        <div class="metric-label">Usuários</div>
+      </div>
+      <div class="metric-card glass-card">
+        <div class="metric-value" id="m-plans">—</div>
+        <div class="metric-label">Planos</div>
+      </div>
+      <div class="metric-card glass-card">
+        <div class="metric-value" id="m-machines">—</div>
+        <div class="metric-label">Máquinas</div>
+      </div>
+      <div class="metric-card glass-card">
+        <div class="metric-value" id="m-online">—</div>
+        <div class="metric-label">Online</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLANS -->
+  <section id="plans-section" class="page hidden">
+    <div class="page-header">
+      <h1>Planos <button id="btn-new-plan" class="btn">Novo Plano</button></h1>
+    </div>
+    <div id="plans-list" class="cards-grid"></div>
+
+    <!-- Plan Form Modal -->
+    <div id="plan-modal" class="modal hidden">
+      <div class="modal-content glass-card">
+        <h2 id="plan-modal-title">Novo Plano</h2>
+        <div class="form-grid">
+          <input type="text" id="plan-id" placeholder="ID (ex: start)">
+          <input type="text" id="plan-name" placeholder="Nome (ex: Start)">
+          <input type="text" id="plan-vram" placeholder="VRAM (ex: 6GB)">
+          <input type="text" id="plan-storage" placeholder="Storage (ex: 100GB)">
+          <input type="number" id="plan-price-hr" placeholder="Preço/hora" step="0.01">
+          <input type="number" id="plan-price-month" placeholder="Preço/mês" step="0.01">
+          <input type="number" id="plan-max-users" placeholder="Max usuários" value="100">
+        </div>
+        <div class="modal-actions">
+          <button id="btn-save-plan" class="btn btn-primary">Salvar</button>
+          <button id="btn-close-plan-modal" class="btn">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MACHINES -->
+  <section id="machines-section" class="page hidden">
+    <div class="page-header">
+      <h1>Máquinas</h1>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>ID</th><th>Nome</th><th>GPU</th><th>VRAM</th><th>$/h</th><th>Status</th><th>Provider</th><th>Ações</th></tr></thead>
+      <tbody id="machines-tbody"></tbody>
+    </table>
+  </section>
+
+  <!-- USERS -->
+  <section id="users-section" class="page hidden">
+    <div class="page-header">
+      <h1>Usuários</h1>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Email</th><th>Role</th><th>Criado Em</th></tr></thead>
+      <tbody id="users-tbody"></tbody>
+    </table>
+  </section>
+
+  <!-- PROVIDERS SECTION -->
+  <section id="providers-section" class="page hidden">
+    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <div>
+        <h2>Marketplace P2P</h2>
+        <p style="color:#a0a0a0; margin-top:0.5rem;">Sincronização de GPUs externas provenientes de APIs na nuvem.</p>
+      </div>
+      <button id="btn-sync-cloud" class="btn" style="background:#8b5cf6; color:#fff; border:none; padding:10px 20px; font-weight:bold; cursor:pointer; border-radius:8px;">
+        🔄 Sincronizar Máquinas Vast.AI
+      </button>
+    </div>
+  </section>
+
+  <!-- LOGS -->
+  <section id="logs-section" class="page hidden">
+    <div class="page-header">
+      <h1>Log de Auditoria</h1>
+    </div>
+    <div class="glass-card" style="padding: 2rem; color: #a0a0a0; text-align: center;">
+      Nenhuma atividade registrada ainda.
+    </div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crolab — GPU Cloud para IA</title>
+<meta name="description" content="Alugue GPUs baratas para treinar modelos de IA. Interface simples, poder de datacenter.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="client.css">
+</head>
+<body>
+
+<div class="colab-layout">
+  
+  <!-- BARRA LATERAL (Google Colab Style) -->
+  <aside class="colab-sidebar" id="client-sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">⚡</span>
+      <span class="brand-text">Crolab</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-tab" data-tab="home" id="btn-tab-home">🏠 Dashboard</button>
+      <button class="nav-tab" data-tab="plans" id="btn-tab-plans">💎 Assinaturas</button>
+      <button class="nav-tab" data-tab="machines" id="btn-tab-machines">🖥️ Nodos (P2P)</button>
+      <button class="nav-tab" data-tab="jobs" id="btn-tab-jobs">⚙️ Execuções</button>
+      <button class="nav-tab" data-tab="billing" id="btn-tab-billing">💰 Financeiro</button>
+      <div style="flex:1"></div>
+      <hr style="border:0; border-top: 1px solid var(--border); margin: 1rem 0">
+      <button class="nav-tab" data-tab="settings" id="btn-tab-settings">⚙️ Configurações</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-indicator online"></div> Global API Online
+    </div>
+  </aside>
+
+  <!-- ÁREA PRINCIPAL -->
+  <div class="colab-main">
+    
+    <!-- HEADER -->
+    <header class="colab-topbar">
+      <div class="topbar-left">
+        <span class="topbar-title" id="topbar-title">Terminal / Ambiente</span>
+      </div>
+      <div class="nav-user">
+        <span id="user-credits" class="credits-badge hidden">$0.00</span>
+        <span id="user-email" class="hidden">—</span>
+        <button id="btn-show-auth" class="btn-primary">Entrar / Cadastrar</button>
+        <button id="btn-logout" class="btn-ghost hidden">Sair</button>
+      </div>
+    </header>
+
+    <main class="colab-content">
+      
+      <!-- LANDING PAGE (Visão Inicial para não logados) -->
+      <section id="landing-section" class="page active">
+        <div class="landing-welcome">
+          <h1>Poder Soberano em Ia. <br><span class="gradient-text">Computação Descentralizada.</span></h1>
+          <p>Treine seus modelos de linguagem, hospede contêineres e provisione GPUs de altíssima densidade como se fossem locais usando Módulos P2P.</p>
+          <div class="landing-actions">
+            <button id="btn-start-landing" class="btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem">Iniciar Plataforma</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- AUTH AREA (Substitui sobreposição) -->
+      <section id="auth-section" class="page hidden">
+        <div class="glass-card auth-card" style="margin: 3rem auto;">
+          <h2>Autenticação</h2>
+          <p class="auth-subtitle">Acesse sua chave assimétrica nativa</p>
+          <div id="auth-login">
+            <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
+            <input type="password" id="auth-password" placeholder="Senha" autocomplete="current-password">
+            <button id="btn-auth-login" class="btn-primary" style="width: 100%">Entrar no Cluster</button>
+            <p class="auth-switch" style="margin-top: 1rem; text-align: center">Não tem uma root-key? <a href="#" id="btn-show-register">Gerar Nova Conta</a></p>
+          </div>
+          <div id="auth-register" class="hidden">
+            <input type="email" id="reg-email" placeholder="Email" autocomplete="email">
+            <input type="password" id="reg-password" placeholder="Senha" autocomplete="new-password">
+            <button id="btn-auth-register" class="btn-primary" style="width: 100%">Criar Identidade</button>
+            <p class="auth-switch" style="margin-top: 1rem; text-align: center">Já é um nó validado? <a href="#" id="btn-show-login">Login</a></p>
+          </div>
+          <p id="auth-error" class="error-text" style="text-align: center; margin-top:1rem"></p>
+        </div>
+      </section>
+
+      <!-- HOME DASHBOARD (Visão Logada) -->
+      <section id="home-section" class="page hidden">
+        <div class="page-header">
+          <h1>Soberania de Node</h1>
+        </div>
+        <div class="metric-grid">
+          <div class="glass-card metric-card">
+            <div class="metric-icon">💰</div>
+            <div class="metric-value" id="h-credits">—</div>
+            <div class="metric-label">Créditos de Processamento</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-icon">📋</div>
+            <div class="metric-value" id="h-plan">—</div>
+            <div class="metric-label">Assinatura Híbrida</div>
+          </div>
+          <div class="glass-card metric-card">
+            <div class="metric-icon">🖥️</div>
+            <div class="metric-value" id="h-machines">—</div>
+            <div class="metric-label">Nodos Instanciados</div>
+          </div>
+        </div>
+
+        <div class="quick-start glass-card" style="margin-top:2rem">
+          <h2>🚀 Terminal Integration</h2>
+          <p>Dispare jobs da sua máquina para esse cluster sem acessar navegador.</p>
+          <div class="code-block" style="margin-top:1rem">
+            <code># Submeter um pipeline em um de seus Nodos<br>crolab run . --image python:3.11 --cmd "python train.py" --machine [ID]</code>
+          </div>
+        </div>
+      </section>
+
+      <!-- PLANS -->
+      <section id="plans-section" class="page hidden">
+        <div class="page-header">
+          <h1>Catálogo de Subnets</h1>
+        </div>
+        <div id="plans-grid" class="plans-grid"></div>
+        <div id="subscription-info" class="glass-card" style="margin-top:2rem">
+          <h3>Seu Perfil Atual</h3>
+          <p id="sub-details">Conectividade Básica</p>
+          <button id="btn-unsubscribe" class="btn-danger hidden" style="margin-top:.75rem">Revogar Acesso</button>
+        </div>
+      </section>
+
+      <!-- MACHINES -->
+      <section id="machines-section" class="page hidden">
+        <div class="page-header">
+          <h1>Nodos na sua Rede P2P</h1>
+          <button id="btn-connect-machine" class="btn-primary">+ Conectar Endpoint Pessoal</button>
+        </div>
+        <div id="gpu-grid" class="gpu-grid"></div>
+        <div id="connect-form" class="glass-card hidden" style="margin-top:1.5rem">
+          <h3>Bridge RPC Endpoint</h3>
+          <div class="form-row">
+            <input type="text" id="conn-address" placeholder="IP:porta (10.0.0.5:4422)">
+            <input type="text" id="conn-token" placeholder="Node Auth Token">
+            <input type="text" id="conn-name" placeholder="Alias">
+            <button id="btn-do-connect" class="btn-primary">Estabelecer Bridge</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- JOBS -->
+      <section id="jobs-section" class="page hidden">
+        <div class="page-header">
+          <h1>Fila de Processamento (Jobs)</h1>
+          <button id="btn-refresh-jobs" class="btn-ghost">🔄 Sincronizar Fila</button>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Hash Identifier</th><th>Tenant Plan</th><th>Node Binding</th><th>Estado</th><th>Runtime (s)</th><th>Burn</th><th>Timestamp</th></tr></thead>
+          <tbody id="jobs-tbody"></tbody>
+        </table>
+      </section>
+
+      <!-- BILLING -->
+      <section id="billing-section" class="page hidden">
+        <div class="page-header">
+          <h1>Tesouraria</h1>
+        </div>
+        <div class="billing-header glass-card">
+          <div class="billing-balance">
+            <span class="billing-label">Liquidez do Cluster</span>
+            <span class="billing-value" id="bill-credits">$0.00</span>
+          </div>
+          <div class="billing-actions">
+            <button class="btn-primary" onclick="buyCredits(10)">Mint +$10</button>
+            <button class="btn-primary" onclick="buyCredits(50)">Mint +$50</button>
+            <button class="btn-primary" onclick="buyCredits(100)">Mint +$100</button>
+          </div>
+        </div>
+        <h3 style="margin:1.5rem 0 .75rem">Ledger</h3>
+        <table class="data-table">
+          <thead><tr><th>Tx Data</th><th>Tipo</th><th>Volume</th><th>Meta Info</th></tr></thead>
+          <tbody id="tx-tbody"></tbody>
+        </table>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="settings-section" class="page hidden">
+        <div class="page-header">
+          <h1>⚙️ Alvo do Hub (Settings)</h1>
+        </div>
+        <div class="glass-card" style="max-width: 600px">
+          <p style="color:var(--text-muted); margin-bottom:1rem">Ajuste o IP do Backend de orquestração se estiver operando numa subnet manual (Crolab Provider Server).</p>
+          <div class="form-row">
+            <input type="text" id="config-target-url" placeholder="http://192.168.0.x:8844">
+            <button id="btn-save-config" class="btn-primary">Salvar e Recarregar</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="client.js"></script>
+</body>
+</html>

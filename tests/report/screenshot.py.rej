@@ -1,0 +1,14 @@
+--- tests/report/screenshot.py
++++ tests/report/screenshot.py
+@@ -34,6 +34,11 @@
+         page.wait_for_timeout(2000)
+ 
+         # Fallback Client Login
++        if page.is_visible("#btn-show-auth"):
++            print("Landing visible. Going to auth proxy...")
++            page.click("#btn-show-auth")
++            page.wait_for_timeout(1000)
++            
+         if page.is_visible("#auth-email"):
+             print("SSO Failed for Client, doing manual login...")
+             page.fill("#auth-email", "admin@crolab.com")

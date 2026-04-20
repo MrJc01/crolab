@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Crolab Lab — Editor de código e executor de scripts no navegador">
+    <title>Crolab Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="lab.css">
+</head>
+<body>
+    <div id="lab-app">
+        <!-- Top Bar -->
+        <header class="topbar" id="topbar">
+            <div class="topbar-left">
+                <span class="lab-logo">◈ Crolab Lab</span>
+                <span class="workspace-path" id="workspace-path" title="Clique para trocar pasta">~/</span>
+            </div>
+            <div class="topbar-center">
+                <span class="file-name" id="current-file-name">Nenhum arquivo aberto</span>
+                <span class="save-indicator" id="save-indicator"></span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbar-btn" id="btn-run" title="Executar (Ctrl+Enter)">▶ Executar</button>
+                <button class="topbar-btn secondary" id="btn-new-file" title="Novo arquivo">+ Novo</button>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <div class="lab-layout">
+            <!-- File Explorer -->
+            <aside class="file-explorer" id="file-explorer">
+                <div class="explorer-header">
+                    <span>Arquivos</span>
+                    <button class="icon-btn" id="btn-refresh-files" title="Refresh">↻</button>
+                </div>
+                <div class="file-tree" id="file-tree"></div>
+                <div class="explorer-footer">
+                    <button class="icon-btn full-width" id="btn-change-dir">📁 Trocar Pasta</button>
+                </div>
+            </aside>
+
+            <!-- Editor + Terminal -->
+            <div class="editor-area">
+                <!-- Code Editor -->
+                <div class="editor-panel" id="editor-panel">
+                    <div class="editor-tabs" id="editor-tabs">
+                        <span class="tab-empty">Abra um arquivo ou crie um novo</span>
+                    </div>
+                    <textarea class="code-editor" id="code-editor" spellcheck="false" placeholder="# Selecione ou crie um arquivo para começar..."></textarea>
+                </div>
+
+                <!-- Resize Handle -->
+                <div class="resize-handle" id="resize-handle"></div>
+
+                <!-- Terminal Output -->
+                <div class="terminal-panel" id="terminal-panel">
+                    <div class="terminal-header">
+                        <span>Terminal</span>
+                        <div class="terminal-actions">
+                            <button class="icon-btn" id="btn-clear-terminal" title="Limpar">✕</button>
+                        </div>
+                    </div>
+                    <div class="terminal-output" id="terminal-output">
+                        <div class="term-line term-info">Crolab Lab pronto. Abra um arquivo e clique ▶ Executar.</div>
+                    </div>
+                    <div class="terminal-input-row">
+                        <span class="prompt">$</span>
+                        <input type="text" class="terminal-input" id="terminal-input" placeholder="Digite um comando..." />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="lab.js"></script>
+</body>
+</html>
