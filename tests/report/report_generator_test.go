@@ -25,7 +25,13 @@ func TestGenerateReportFull(t *testing.T) {
 	
 	dbPath := filepath.Join(t.TempDir(), "crolab_test_report.db")
 
-	crolabEnv := append(os.Environ(), "HOME="+cliHome, "CROLAB_HOME="+cliHome)
+	crolabEnv := append(os.Environ(),
+		"HOME="+cliHome,
+		"CROLAB_HOME="+cliHome,
+		"CROLAB_NO_PROMPT=true",
+		"CROLAB_ADMIN_EMAIL=admin@crolab.com",
+		"CROLAB_ADMIN_PASS=admin123",
+	)
 
 	// 2. Verify the exact Crolab Binary exists
 	t.Log("Verifying target binary...")
@@ -39,9 +45,11 @@ func TestGenerateReportFull(t *testing.T) {
 
 	// 3. Start Crolab Provider (Frontend Admin/Client)
 	t.Log("Starting Provider server for screenshots...")
-	cmdServer := exec.Command(binPath, "provider", "--admin-port", ":18844", "--client-port", ":18855", "--db", dbPath)
+	cmdServer := exec.Command(binPath, "provider", "start", "--admin-port", ":18844", "--client-port", ":18855", "--db", dbPath, "--no-prompt")
 	cmdServer.Dir = "../../"
 	cmdServer.Env = crolabEnv
+	cmdServer.Stdout = os.Stdout
+	cmdServer.Stderr = os.Stderr
 	if err := cmdServer.Start(); err != nil {
 		t.Fatalf("falha ao iniciar server: %v", err)
 	}
@@ -52,8 +60,8 @@ func TestGenerateReportFull(t *testing.T) {
 	// Wait for server boot
 	time.Sleep(3 * time.Second)
 
-	// 3.5. Configure CLI & Seed Admin via CLI (testando Local SSO Server)
-	t.Log("🌱 Configurando CLI para servidor local e Registrando Admin...")
+	// 3.5. Configure CLI target (needed for CLI commands)
+	t.Log("Configurando CLI para servidor local...")
 	
 	cmdCfgLocal := exec.Command(binPath, "config", "add", "local", "http://localhost:18844")
 	cmdCfgLocal.Env = crolabEnv
@@ -62,12 +70,6 @@ func TestGenerateReportFull(t *testing.T) {
 	cmdCfgDefault := exec.Command(binPath, "config", "set-default", "local")
 	cmdCfgDefault.Env = crolabEnv
 	cmdCfgDefault.Run()
-	
-	cmdReg := exec.Command(binPath, "auth", "register", "admin@crolab.com", "admin123")
-	cmdReg.Env = crolabEnv
-	if err := cmdReg.Run(); err != nil {
-		t.Logf("Aviso: Falha ao registrar admin (SaaS): %v", err)
-	}
 
 	// 4. Run Python Playwright Scrapes
 	t.Log("📸 Acionando Scraper via Python Playwright...")

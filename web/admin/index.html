@@ -8,34 +8,35 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="admin.css">
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <nav id="admin-nav">
     <div class="nav-brand">
-      <span class="brand-icon">⚡</span>
+      <i data-lucide="zap" class="brand-icon" style="color: #8b5cf6;"></i>
       <span class="brand-text">Crolab <span class="brand-badge">Admin</span></span>
     </div>
     <div class="nav-tabs">
-      <button class="nav-tab active" data-tab="dashboard" id="btn-tab-dashboard">📊 Dashboard</button>
-      <button class="nav-tab" data-tab="plans" id="btn-tab-plans">📋 Planos</button>
-      <button class="nav-tab" data-tab="machines" id="btn-tab-machines">🖥️ Máquinas</button>
-      <button class="nav-tab" data-tab="users" id="btn-tab-users">👤 Usuários</button>
-      <button class="nav-tab" data-tab="providers" id="btn-tab-providers">☁️ Nuvem / Sync</button>
-      <button class="nav-tab" data-tab="logs" id="btn-tab-logs">📜 Logs</button>
+      <button class="nav-tab auth-only hidden active" data-tab="dashboard" id="btn-tab-dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
+      <button class="nav-tab auth-only hidden" data-tab="plans" id="btn-tab-plans"><i data-lucide="list"></i> Planos</button>
+      <button class="nav-tab auth-only hidden" data-tab="machines" id="btn-tab-machines"><i data-lucide="server"></i> Máquinas</button>
+      <button class="nav-tab auth-only hidden" data-tab="users" id="btn-tab-users"><i data-lucide="users"></i> Usuários</button>
+      <button class="nav-tab auth-only hidden" data-tab="providers" id="btn-tab-providers"><i data-lucide="cloud"></i> Nuvem / Sync</button>
+      <button class="nav-tab auth-only hidden" data-tab="logs" id="btn-tab-logs"><i data-lucide="scroll-text"></i> Logs</button>
     </div>
     <div class="nav-user">
-      <span id="admin-email">admin</span>
-      <button id="btn-logout" class="btn-text">Sair</button>
+      <span id="admin-email" class="auth-only hidden">admin</span>
+      <button id="btn-logout" class="btn-ghost auth-only hidden">Sair</button>
     </div>
   </nav>
 
   <!-- LOGIN -->
   <section id="login-section" class="section-center">
     <div class="glass-card login-card">
-      <h1>🔐 Admin Login</h1>
+      <h1><i data-lucide="shield" style="display:inline-block;vertical-align:middle;width:24px;height:24px;margin-right:6px"></i> Admin Login</h1>
       <input type="email" id="login-email" placeholder="Email" autocomplete="email">
       <input type="password" id="login-password" placeholder="Senha" autocomplete="current-password">
-      <button id="btn-login" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">Entrar</button>
+      <button id="btn-login" class="btn-primary" style="margin-top: 1rem; width: 100%;">Entrar</button>
       <p id="login-error" class="error-text"></p>
     </div>
   </section>
@@ -43,7 +44,8 @@
   <!-- DASHBOARD -->
   <section id="dashboard-section" class="page hidden">
     <div class="page-header">
-      <h1>Dashboard <button id="btn-refresh-dash" class="btn" style="font-size: 0.9rem; padding: 4px 10px;">Atualizar</button></h1>
+      <h1>Dashboard</h1>
+      <button id="btn-refresh-dash" class="btn-ghost"><i data-lucide="refresh-cw" style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:4px"></i> Refresh</button>
     </div>
     <div class="metric-grid">
       <div class="metric-card glass-card">
@@ -68,7 +70,8 @@
   <!-- PLANS -->
   <section id="plans-section" class="page hidden">
     <div class="page-header">
-      <h1>Planos <button id="btn-new-plan" class="btn">Novo Plano</button></h1>
+      <h1>Planos</h1>
+      <button id="btn-new-plan" class="btn-primary"><i data-lucide="plus" style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:4px"></i> Novo Plano</button>
     </div>
     <div id="plans-list" class="cards-grid"></div>
 
@@ -86,22 +89,59 @@
           <input type="number" id="plan-max-users" placeholder="Max usuários" value="100">
         </div>
         <div class="modal-actions">
-          <button id="btn-save-plan" class="btn btn-primary">Salvar</button>
-          <button id="btn-close-plan-modal" class="btn">Cancelar</button>
+          <button id="btn-save-plan" class="btn-primary">Salvar</button>
+          <button id="btn-close-plan-modal" class="btn-ghost">Cancelar</button>
         </div>
       </div>
     </div>
+
+    <!-- Pool Sub-Section (attached to a plan) -->
+    <section id="pool-section" class="hidden" style="margin-top: 2rem;">
+      <div class="page-header">
+        <h2>Pool de Prioridade: <span id="pool-plan-name">—</span></h2>
+        <button id="btn-add-pool" class="btn-primary"><i data-lucide="plus" style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:4px"></i> Adicionar Node</button>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Prioridade</th><th>Provider</th><th>Label</th><th>Endereço</th><th>Ações</th></tr></thead>
+        <tbody id="pool-tbody"></tbody>
+      </table>
+      <div id="pool-form" class="glass-card hidden" style="margin-top: 1rem; padding: 1.5rem;">
+        <h3>Novo Nó no Pool</h3>
+        <div class="form-grid">
+          <input type="number" id="pool-priority" placeholder="Prioridade (1-10)" value="1">
+          <input type="text" id="pool-provider" placeholder="Provider (ex: vastai)">
+          <input type="text" id="pool-label" placeholder="Label (ex: RTX 4090)">
+          <input type="text" id="pool-address" placeholder="Endereço (IP:porta)">
+          <input type="text" id="pool-token" placeholder="Token de Acesso">
+        </div>
+        <button id="btn-save-pool" class="btn-primary" style="margin-top: 1rem;">Salvar Nó</button>
+      </div>
+    </section>
   </section>
 
   <!-- MACHINES -->
   <section id="machines-section" class="page hidden">
     <div class="page-header">
       <h1>Máquinas</h1>
+      <button id="btn-new-machine" class="btn-primary"><i data-lucide="plus" style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:4px"></i> Nova Máquina</button>
     </div>
     <table class="data-table">
       <thead><tr><th>ID</th><th>Nome</th><th>GPU</th><th>VRAM</th><th>$/h</th><th>Status</th><th>Provider</th><th>Ações</th></tr></thead>
       <tbody id="machines-tbody"></tbody>
     </table>
+    <div id="machine-form" class="glass-card hidden" style="margin-top: 1.5rem; padding: 1.5rem;">
+      <h3>Registrar Máquina</h3>
+      <div class="form-grid">
+        <input type="text" id="machine-id" placeholder="ID (ex: gpu-01)">
+        <input type="text" id="machine-name" placeholder="Nome">
+        <input type="text" id="machine-gpu" placeholder="GPU (ex: RTX 4090)">
+        <input type="text" id="machine-vram" placeholder="VRAM (ex: 24GB)">
+        <input type="number" id="machine-price" placeholder="Preço/hora" step="0.01">
+        <input type="text" id="machine-address" placeholder="Endereço (IP:porta)">
+        <input type="text" id="machine-provider" placeholder="Provider (ex: personal)">
+      </div>
+      <button id="btn-save-machine" class="btn-primary" style="margin-top: 1rem;">Salvar Máquina</button>
+    </div>
   </section>
 
   <!-- USERS -->
@@ -110,20 +150,20 @@
       <h1>Usuários</h1>
     </div>
     <table class="data-table">
-      <thead><tr><th>Email</th><th>Role</th><th>Criado Em</th></tr></thead>
+      <thead><tr><th>ID</th><th>Email</th><th>Role</th><th>Créditos</th><th>Criado Em</th><th>Ações</th></tr></thead>
       <tbody id="users-tbody"></tbody>
     </table>
   </section>
 
   <!-- PROVIDERS SECTION -->
   <section id="providers-section" class="page hidden">
-    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div class="page-header">
       <div>
-        <h2>Marketplace P2P</h2>
-        <p style="color:#a0a0a0; margin-top:0.5rem;">Sincronização de GPUs externas provenientes de APIs na nuvem.</p>
+        <h1>Marketplace P2P</h1>
+        <p style="color:var(--text-muted); margin-top:0.5rem;">Sincronização de GPUs externas provenientes de APIs na nuvem.</p>
       </div>
-      <button id="btn-sync-cloud" class="btn" style="background:#8b5cf6; color:#fff; border:none; padding:10px 20px; font-weight:bold; cursor:pointer; border-radius:8px;">
-        🔄 Sincronizar Máquinas Vast.AI
+      <button id="btn-sync-cloud" class="btn-primary">
+        <i data-lucide="refresh-cw" style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:4px"></i> Sincronizar Vast.AI
       </button>
     </div>
   </section>
@@ -132,10 +172,12 @@
   <section id="logs-section" class="page hidden">
     <div class="page-header">
       <h1>Log de Auditoria</h1>
+      <button id="btn-refresh-logs" class="btn-ghost"><i data-lucide="refresh-cw" style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:4px"></i> Atualizar</button>
     </div>
-    <div class="glass-card" style="padding: 2rem; color: #a0a0a0; text-align: center;">
-      Nenhuma atividade registrada ainda.
-    </div>
+    <table class="data-table">
+      <thead><tr><th>ID</th><th>Usuário</th><th>Tipo</th><th>Valor</th><th>Descrição</th><th>Data</th></tr></thead>
+      <tbody id="logs-tbody"></tbody>
+    </table>
   </section>
 
   <div id="toast" class="toast hidden"></div>

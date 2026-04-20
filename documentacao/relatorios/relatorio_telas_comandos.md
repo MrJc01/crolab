@@ -18,10 +18,10 @@ Available Commands:
   auth        Autenticação com a Crom Cloud
   billing     Faturamento e créditos Crom Cloud
   cloud-serve Gerencia o servidor Central Cloud API
-  cloud-serve Gerencia o servidor Central Cloud API
   completion  Generate the autocompletion script for the specified shell
   config      Gerencia servidores conectados
   connect     Conectar máquina pessoal
+  db          Gerencia persistência de dados (Backups, Snapshots SQLite)
   help        Help about any command
   lab         Abre o Crolab Lab — editor web com execução de scripts
   monitor     Abre o dashboard interativo no terminal
@@ -32,6 +32,7 @@ Available Commands:
   serve       Gerencia o Crolab Node (daemon gRPC que executa jobs)
   status      Mostra o estado local do Crolab (config, GPUs, versão)
   subscribe   Assinar um plano
+  version     Mostra a versão do Crolab
   web         Gerencia o Portal Web interface
 
 Flags:

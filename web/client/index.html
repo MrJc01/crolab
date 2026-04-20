@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="client.css">
+<script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -16,18 +17,18 @@
   <!-- BARRA LATERAL (Google Colab Style) -->
   <aside class="colab-sidebar" id="client-sidebar">
     <div class="sidebar-brand">
-      <span class="brand-icon">⚡</span>
+      <i data-lucide="zap" class="brand-icon" style="color: #8b5cf6;"></i>
       <span class="brand-text">Crolab</span>
     </div>
     <nav class="sidebar-nav">
-      <button class="nav-tab" data-tab="home" id="btn-tab-home">🏠 Dashboard</button>
-      <button class="nav-tab" data-tab="plans" id="btn-tab-plans">💎 Assinaturas</button>
-      <button class="nav-tab" data-tab="machines" id="btn-tab-machines">🖥️ Nodos (P2P)</button>
-      <button class="nav-tab" data-tab="jobs" id="btn-tab-jobs">⚙️ Execuções</button>
-      <button class="nav-tab" data-tab="billing" id="btn-tab-billing">💰 Financeiro</button>
+      <button class="nav-tab auth-only hidden active" data-tab="home" id="btn-tab-home"><i data-lucide="home"></i> Dashboard</button>
+      <button class="nav-tab auth-only hidden" data-tab="plans" id="btn-tab-plans"><i data-lucide="gem"></i> Assinaturas</button>
+      <button class="nav-tab auth-only hidden" data-tab="machines" id="btn-tab-machines"><i data-lucide="server"></i> Nodos (P2P)</button>
+      <button class="nav-tab auth-only hidden" data-tab="jobs" id="btn-tab-jobs"><i data-lucide="cpu"></i> Execuções</button>
+      <button class="nav-tab auth-only hidden" data-tab="billing" id="btn-tab-billing"><i data-lucide="wallet"></i> Financeiro</button>
       <div style="flex:1"></div>
-      <hr style="border:0; border-top: 1px solid var(--border); margin: 1rem 0">
-      <button class="nav-tab" data-tab="settings" id="btn-tab-settings">⚙️ Configurações</button>
+      <hr style="border:0; border-top: 1px solid var(--border); margin: 1rem 0" class="auth-only hidden">
+      <button class="nav-tab auth-only hidden" data-tab="settings" id="btn-tab-settings"><i data-lucide="settings"></i> Configurações</button>
     </nav>
     <div class="sidebar-footer">
       <div class="status-indicator online"></div> Global API Online
@@ -91,24 +92,24 @@
         </div>
         <div class="metric-grid">
           <div class="glass-card metric-card">
-            <div class="metric-icon">💰</div>
+            <div class="metric-icon"><i data-lucide="wallet"></i></div>
             <div class="metric-value" id="h-credits">—</div>
             <div class="metric-label">Créditos de Processamento</div>
           </div>
           <div class="glass-card metric-card">
-            <div class="metric-icon">📋</div>
+            <div class="metric-icon"><i data-lucide="clipboard-list"></i></div>
             <div class="metric-value" id="h-plan">—</div>
             <div class="metric-label">Assinatura Híbrida</div>
           </div>
           <div class="glass-card metric-card">
-            <div class="metric-icon">🖥️</div>
+            <div class="metric-icon"><i data-lucide="server"></i></div>
             <div class="metric-value" id="h-machines">—</div>
             <div class="metric-label">Nodos Instanciados</div>
           </div>
         </div>
 
         <div class="quick-start glass-card" style="margin-top:2rem">
-          <h2>🚀 Terminal Integration</h2>
+          <h2><i data-lucide="terminal" style="display:inline-block; vertical-align:middle; width:28px; height:28px"></i> Terminal Integration</h2>
           <p>Dispare jobs da sua máquina para esse cluster sem acessar navegador.</p>
           <div class="code-block" style="margin-top:1rem">
             <code># Submeter um pipeline em um de seus Nodos<br>crolab run . --image python:3.11 --cmd "python train.py" --machine [ID]</code>
@@ -151,7 +152,7 @@
       <section id="jobs-section" class="page hidden">
         <div class="page-header">
           <h1>Fila de Processamento (Jobs)</h1>
-          <button id="btn-refresh-jobs" class="btn-ghost">🔄 Sincronizar Fila</button>
+          <button id="btn-refresh-jobs" class="btn-ghost"><i data-lucide="refresh-cw" style="display:inline-block;vertical-align:middle;width:14px;height:14px;margin-right:4px"></i> Sincronizar Fila</button>
         </div>
         <table class="data-table">
           <thead><tr><th>Hash Identifier</th><th>Tenant Plan</th><th>Node Binding</th><th>Estado</th><th>Runtime (s)</th><th>Burn</th><th>Timestamp</th></tr></thead>
@@ -185,7 +186,7 @@
       <!-- SETTINGS -->
       <section id="settings-section" class="page hidden">
         <div class="page-header">
-          <h1>⚙️ Alvo do Hub (Settings)</h1>
+          <h1><i data-lucide="settings" style="display:inline-block; vertical-align:middle; width:32px; height:32px; margin-right:8px"></i> Alvo do Hub (Settings)</h1>
         </div>
         <div class="glass-card" style="max-width: 600px">
           <p style="color:var(--text-muted); margin-bottom:1rem">Ajuste o IP do Backend de orquestração se estiver operando numa subnet manual (Crolab Provider Server).</p>

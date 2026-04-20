@@ -32,6 +32,15 @@ func InitDB(path string) error {
 	return migrate()
 }
 
+// DBBackup faz um dump seguro e concorrente usando VACUUM INTO
+func DBBackup(destPath string) error {
+	if db == nil {
+		return fmt.Errorf("banco de dados não inicializado")
+	}
+	_, err := db.Exec(fmt.Sprintf("VACUUM INTO '%s'", destPath))
+	return err
+}
+
 func migrate() error {
 	tables := []string{
 		`CREATE TABLE IF NOT EXISTS kv_settings (

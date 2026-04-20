@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -1133,6 +1134,10 @@ func BuildMux(webDir string) http.Handler {
 	mux.HandleFunc("/client/machines/", handleClientMachines)
 	mux.HandleFunc("/client/jobs", handleClientJobs)
 	mux.HandleFunc("/client/run", handleClientRun)
+	
+	// Tensors P2P (Chunked Streaming API)
+	mux.HandleFunc("/tensors/upload", handleTensorUpload)
+	mux.HandleFunc("/tensors/download/", handleTensorDownload)
 
 	// Observabilidade
 	mux.HandleFunc("/metrics", handlePrometheusMetrics)
@@ -1141,6 +1146,12 @@ func BuildMux(webDir string) http.Handler {
 	if webDir != "" {
 		fs := http.FileServer(http.Dir(webDir))
 		mux.Handle("/", fs)
+		
+		// Expose SDK global
+		sdkPath := filepath.Join(filepath.Dir(webDir), "sdk")
+		if stat, err := os.Stat(sdkPath); err == nil && stat.IsDir() {
+			mux.Handle("/sdk/", http.StripPrefix("/sdk/", http.FileServer(http.Dir(sdkPath))))
+		}
 	} else {
 		// Use embedded FS globally
 		embedFS, err := fs.Sub(web.StaticFiles, ".")
@@ -1202,4 +1213,75 @@ func handleAdminProvidersSync(w http.ResponseWriter, r *http.Request) {
 		"message": fmt.Sprintf("Sincronização Vast.AI Mestre! %d máquinas sugadas para sua Cloud Local.", total),
 		"count": total,
 	})
+}
+
+// --- Tensor P2P Handlers ---
+func handleTensorUpload(w http.ResponseWriter, r *http.Request) {
+	if requireAuth(w, r) == nil {
+		return
+	}
+	if r.Method != http.MethodPost {
+		jsonError(w, http.StatusMethodNotAllowed, "Requer POST")
+		return
+	}
+
+	err := r.ParseMultipartForm(500 << 20) // Limit to 500MB in-memory per chunk segment
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, "Arquivo mutio grande ou malformado")
+		return
+	}
+
+	file, header, err := r.FormFile("tensor")
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, "Falha ao ler tensor")
+		return
+	}
+	defer file.Close()
+
+	os.MkdirAll(".crolab/tensors", 0755)
+	destPath := filepath.Join(".crolab/tensors", sanitize(header.Filename))
+
+	out, err := os.Create(destPath)
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, "Erro de I/O no nó")
+		return
+	}
+	defer out.Close()
+
+	// chunked buffering auto
+	_, err = out.ReadFrom(file)
+	if err != nil {
+		jsonError(w, http.StatusInternalServerError, "Erro durante file-streaming")
+		return
+	}
+
+	jsonResponse(w, 201, map[string]string{
+		"status": "success",
+		"message": "Tensor '" + header.Filename + "' sincronizado com o Nó P2P.",
+	})
+}
+
+func handleTensorDownload(w http.ResponseWriter, r *http.Request) {
+	if requireAuth(w, r) == nil {
+		return
+	}
+	if r.Method != http.MethodGet {
+		jsonError(w, http.StatusMethodNotAllowed, "Requer GET")
+		return
+	}
+	filename := strings.TrimPrefix(r.URL.Path, "/tensors/download/")
+	filename = sanitize(filename)
+	if filename == "" {
+		jsonError(w, http.StatusBadRequest, "Hash ou nome de Tensor inválido")
+		return
+	}
+
+	targetPath := filepath.Join(".crolab/tensors", filename)
+	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
+		jsonError(w, http.StatusNotFound, "Tensor não encontrado neste Nó")
+		return
+	}
+
+	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	http.ServeFile(w, r, targetPath)
 }

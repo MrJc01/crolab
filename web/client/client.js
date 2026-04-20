@@ -56,6 +56,7 @@ async function checkAuth() {
   document.getElementById('user-credits').classList.remove('hidden');
   document.getElementById('btn-logout').classList.remove('hidden');
   document.getElementById('btn-show-auth').classList.add('hidden');
+  document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
   
   showPage('home');
 }
@@ -80,6 +81,7 @@ function showLanding() {
   document.getElementById('user-credits').classList.add('hidden');
   document.getElementById('btn-logout').classList.add('hidden');
   document.getElementById('btn-show-auth').classList.remove('hidden');
+  document.querySelectorAll('.auth-only').forEach(el => el.classList.add('hidden'));
 }
 
 document.getElementById('btn-start-landing')?.addEventListener('click', () => {
@@ -116,12 +118,12 @@ document.getElementById('btn-auth-register').addEventListener('click', async () 
   const { status, data } = await POST('/auth/register', { email, password });
   if (status !== 201) { document.getElementById('auth-error').textContent = data.error || 'Erro'; return; }
   TOKEN = data.token; localStorage.setItem('client_token', TOKEN);
-  toast('🎉 Conta criada! 10 créditos de boas-vindas.');
+  toast('Conta criada! 10 créditos de boas-vindas.');
   checkAuth();
 });
 
 document.getElementById('btn-logout').addEventListener('click', () => {
-  TOKEN = ''; localStorage.removeItem('client_token'); showAuth();
+  TOKEN = ''; localStorage.removeItem('client_token'); showLanding();
 });
 
 // --- Home ---
@@ -175,10 +177,10 @@ async function loadSubscription() {
 async function subscribePlan(id) {
   const { status, data } = await POST('/client/subscribe', { plan_id: id });
   if (status === 200) {
-    toast('✅ ' + data.message);
+    toast(data.message);
     loadSubscription(); loadHome();
   } else {
-    toast('❌ ' + (data.error || 'Erro ao assinar'));
+    toast(data.error || 'Erro ao assinar');
   }
 }
 
@@ -212,10 +214,10 @@ async function rentMachine(id) {
   // Directly rent an available machine bypassing pool
   const { status, data } = await POST('/machines/rent', { machine_id: id });
   if (status === 200) {
-    toast('✅ ' + data.message);
+    toast(data.message);
     loadGPUs(); loadHome();
   } else {
-    toast('❌ ' + (data.error || 'Erro'));
+    toast(data.error || 'Erro');
   }
 }
 
@@ -227,17 +229,17 @@ document.getElementById('btn-do-connect').addEventListener('click', async () => 
   const addr = document.getElementById('conn-address').value;
   const token = document.getElementById('conn-token').value;
   const name = document.getElementById('conn-name').value;
-  if (!addr || !name) { toast('❌ Nome e IP obrigatórios'); return; }
+  if (!addr || !name) { toast('Nome e IP obrigatórios'); return; }
   
   const { status, data } = await POST('/client/machines', {
     name, address: addr, token, provider: 'personal', priority: 1
   });
   
   if (status === 201) {
-    toast(`✅ Máquina "${name}" conectada.`);
+    toast(`Máquina "${name}" conectada.`);
     document.getElementById('connect-form').classList.add('hidden');
   } else {
-    toast(`❌ Falha: ${data.error}`);
+    toast(`Falha: ${data.error}`);
   }
 });
 
@@ -291,7 +293,7 @@ async function loadBilling() {
 async function buyCredits(amount) {
   const { status } = await POST('/billing/purchase', { amount });
   if (status === 200) {
-    toast(`✅ $${amount} créditos adicionados`);
+    toast(`$${amount} créditos adicionados`);
     loadBilling(); loadHome();
   }
 }
@@ -318,7 +320,7 @@ document.getElementById('btn-save-config')?.addEventListener('click', async () =
   if (res.ok) {
     window.location.reload();
   } else {
-    toast('❌ Falha ao salvar configuração local');
+    toast('Falha ao salvar configuração local');
   }
 });
 
@@ -328,4 +330,5 @@ window.rentMachine = rentMachine;
 window.buyCredits = buyCredits;
 
 // Init
+if (window.lucide) lucide.createIcons();
 checkAuth();

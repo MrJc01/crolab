@@ -9,6 +9,8 @@ try:
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page.on("console", lambda msg: print(f"Browser console: {msg.text}"))
+        page.on("pageerror", lambda exc: print(f"Browser error: {exc}"))
 
         print("Capturing Admin Panel (SSO)...")
         page.goto("http://localhost:18844")

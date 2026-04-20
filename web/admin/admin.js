@@ -7,6 +7,8 @@ const DEL = (p) => crolab._api("DELETE", p);
 // Crolab Admin Panel — Frontend Logic
 let currentPlanID = '';
 
+// --- Init (MUST run first to avoid dead state) ---
+if (window.lucide) lucide.createIcons();
 
 // --- Toast ---
 function toast(msg, duration = 3000) {
@@ -56,13 +58,13 @@ async function checkAuth() {
 
 function showLogin() {
   document.getElementById('login-section').classList.remove('hidden');
-  document.getElementById('admin-nav').style.display = 'none';
+  document.querySelectorAll('.auth-only').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
 }
 
 function hideLogin() {
   document.getElementById('login-section').classList.add('hidden');
-  document.getElementById('admin-nav').style.display = 'flex';
+  document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
 }
 
 document.getElementById('btn-login').addEventListener('click', async () => {
@@ -98,13 +100,15 @@ async function loadDashboard() {
   document.getElementById('m-machines').textContent = data.machines_total ?? '—';
   document.getElementById('m-online').textContent = data.machines_online ?? '—';
 }
-document.getElementById('btn-refresh-dash').addEventListener('click', loadDashboard);
+document.getElementById('btn-refresh-dash')?.addEventListener('click', loadDashboard);
 
 // --- Plans ---
 async function loadPlans() {
   const { data } = await crolab.getPlans();
   const list = document.getElementById('plans-list');
   list.innerHTML = '';
+  // Hide pool if we navigate to plans fresh
+  document.getElementById('pool-section')?.classList.add('hidden');
 
   (data || []).forEach(p => {
     const card = document.createElement('div');
@@ -117,7 +121,7 @@ async function loadPlans() {
       </div>
       <div class="plan-price">$${p.price_hr.toFixed(2)}/h <small>· $${p.price_month.toFixed(2)}/mês</small></div>
       <div class="plan-actions">
-        <button class="btn-sm" onclick="openPool('${p.id}','${p.name}')">🔗 Pool</button>
+        <button class="btn-sm" onclick="openPool('${p.id}','${p.name}')">Pool</button>
         <button class="btn-danger" onclick="deletePlan('${p.id}')">Remover</button>
       </div>
     `;
@@ -125,7 +129,7 @@ async function loadPlans() {
   });
 }
 
-document.getElementById('btn-new-plan').addEventListener('click', () => {
+document.getElementById('btn-new-plan')?.addEventListener('click', () => {
   document.getElementById('plan-modal').classList.remove('hidden');
   document.getElementById('plan-modal-title').textContent = 'Novo Plano';
   ['plan-id','plan-name','plan-vram','plan-storage','plan-price-hr','plan-price-month'].forEach(id => {
@@ -134,11 +138,11 @@ document.getElementById('btn-new-plan').addEventListener('click', () => {
   document.getElementById('plan-max-users').value = '100';
 });
 
-document.getElementById('btn-cancel-plan').addEventListener('click', () => {
+document.getElementById('btn-close-plan-modal')?.addEventListener('click', () => {
   document.getElementById('plan-modal').classList.add('hidden');
 });
 
-document.getElementById('btn-save-plan').addEventListener('click', async () => {
+document.getElementById('btn-save-plan')?.addEventListener('click', async () => {
   const plan = {
     id: document.getElementById('plan-id').value,
     name: document.getElementById('plan-name').value,
@@ -150,18 +154,18 @@ document.getElementById('btn-save-plan').addEventListener('click', async () => {
   };
   const { status } = await POST('/admin/plans', plan);
   if (status === 201) {
-    toast('✅ Plano criado: ' + plan.name);
+    toast('Plano criado: ' + plan.name);
     document.getElementById('plan-modal').classList.add('hidden');
     loadPlans();
   } else {
-    toast('❌ Erro ao criar plano');
+    toast('Erro ao criar plano');
   }
 });
 
 async function deletePlan(id) {
   if (!confirm('Remover plano ' + id + '?')) return;
   await DEL('/admin/plans/' + id);
-  toast('🗑️ Plano removido');
+  toast('Plano removido');
   loadPlans();
 }
 
@@ -185,17 +189,17 @@ async function loadPool() {
       <td><span class="badge badge-available">${e.provider}</span></td>
       <td>${e.label}</td>
       <td><code>${e.address}</code></td>
-      <td><button class="btn-danger" onclick="deletePoolEntry(${e.id})">✕</button></td>
+      <td><button class="btn-danger" onclick="deletePoolEntry(${e.id})">Remover</button></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-document.getElementById('btn-add-pool').addEventListener('click', () => {
+document.getElementById('btn-add-pool')?.addEventListener('click', () => {
   document.getElementById('pool-form').classList.toggle('hidden');
 });
 
-document.getElementById('btn-save-pool').addEventListener('click', async () => {
+document.getElementById('btn-save-pool')?.addEventListener('click', async () => {
   const entry = {
     priority: parseInt(document.getElementById('pool-priority').value) || 1,
     provider: document.getElementById('pool-provider').value,
@@ -204,14 +208,14 @@ document.getElementById('btn-save-pool').addEventListener('click', async () => {
     token: document.getElementById('pool-token').value,
   };
   await POST('/admin/pool/' + currentPlanID, entry);
-  toast('✅ Entrada adicionada ao pool');
+  toast('Entrada adicionada ao pool');
   document.getElementById('pool-form').classList.add('hidden');
   loadPool();
 });
 
 async function deletePoolEntry(id) {
   await DEL('/admin/pool/' + currentPlanID + '/' + id);
-  toast('🗑️ Entrada removida');
+  toast('Entrada removida');
   loadPool();
 }
 
@@ -231,17 +235,17 @@ async function loadMachines() {
       <td class="plan-price">$${m.price_hr.toFixed(2)}</td>
       <td><span class="badge ${statusClass}">${m.status}</span></td>
       <td>${m.provider}</td>
-      <td><button class="btn-danger" onclick="deleteMachine('${m.id}')">✕</button></td>
+      <td><button class="btn-danger" onclick="deleteMachine('${m.id}')">Remover</button></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-document.getElementById('btn-new-machine').addEventListener('click', () => {
+document.getElementById('btn-new-machine')?.addEventListener('click', () => {
   document.getElementById('machine-form').classList.toggle('hidden');
 });
 
-document.getElementById('btn-save-machine').addEventListener('click', async () => {
+document.getElementById('btn-save-machine')?.addEventListener('click', async () => {
   const m = {
     id: document.getElementById('machine-id').value,
     name: document.getElementById('machine-name').value,
@@ -253,18 +257,18 @@ document.getElementById('btn-save-machine').addEventListener('click', async () =
   };
   const { status } = await POST('/admin/machines', m);
   if (status === 201) {
-    toast('✅ Máquina adicionada');
+    toast('Máquina adicionada');
     document.getElementById('machine-form').classList.add('hidden');
     loadMachines();
   } else {
-    toast('❌ Erro ao adicionar');
+    toast('Erro ao adicionar');
   }
 });
 
 async function deleteMachine(id) {
   if (!confirm('Remover máquina ' + id + '?')) return;
   await DEL('/admin/machines/' + id);
-  toast('🗑️ Máquina removida');
+  toast('Máquina removida');
   loadMachines();
 }
 
@@ -283,8 +287,8 @@ async function loadUsers() {
       <td class="plan-price">$${u.Credits.toFixed(2)}</td>
       <td style="font-size:.75rem;color:var(--text-dim)">${u.CreatedAt}</td>
       <td>
-        <button class="btn-sm" onclick="adjustCredits(${u.ID})">💰</button>
-        <button class="btn-sm" onclick="toggleRole(${u.ID},'${u.Role}')">🔄</button>
+        <button class="btn-sm" onclick="adjustCredits(${u.ID})">Creditar</button>
+        <button class="btn-sm" onclick="toggleRole(${u.ID},'${u.Role}')">Trocar Role</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -295,7 +299,7 @@ async function adjustCredits(userID) {
   const amount = prompt('Novo saldo de créditos:');
   if (amount === null) return;
   await PUT('/admin/users/' + userID + '/credits', { credits: parseFloat(amount) });
-  toast('✅ Créditos atualizados');
+  toast('Créditos atualizados');
   loadUsers();
 }
 
@@ -303,7 +307,7 @@ async function toggleRole(userID, currentRole) {
   const newRole = currentRole === 'admin' ? 'client' : 'admin';
   if (!confirm(`Mudar role para ${newRole}?`)) return;
   await PUT('/admin/users/' + userID + '/role', { role: newRole });
-  toast('✅ Role atualizado para ' + newRole);
+  toast('Role atualizado para ' + newRole);
   loadUsers();
 }
 
@@ -330,7 +334,27 @@ async function loadLogs() {
   });
 }
 
-document.getElementById('btn-refresh-logs').addEventListener('click', loadLogs);
+document.getElementById('btn-refresh-logs')?.addEventListener('click', loadLogs);
+
+// --- Providers ---
+async function loadProviders() {
+  // Optionally fetch global configs API here
+}
+
+document.getElementById('btn-sync-cloud')?.addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const originalHtml = btn.innerHTML;
+  btn.textContent = 'Sincronizando...';
+  
+  const {status, data} = await crolab.syncCloud();
+  btn.innerHTML = originalHtml;
+  
+  if (status === 200) {
+    toast(data.message);
+  } else {
+    toast('Erro no Sync Cloud');
+  }
+});
 
 // Expose to onclick handlers
 window.openPool = openPool;
@@ -340,25 +364,5 @@ window.deleteMachine = deleteMachine;
 window.adjustCredits = adjustCredits;
 window.toggleRole = toggleRole;
 
-// --- Init ---
+// --- Auth Check (runs after all DOM bindings are safe) ---
 checkAuth();
-
-// --- Providers ---
-async function loadProviders() {
-  // optionally fetch global configs API here
-}
-
-document.getElementById('btn-sync-cloud')?.addEventListener('click', async (e) => {
-  const btn = e.currentTarget;
-  const originalHtml = btn.innerHTML;
-  btn.innerHTML = '<span>⚡ Puxando GPUs (Aguarde)...</span>';
-  
-  const {status, data} = await crolab.syncCloud();
-  btn.innerHTML = originalHtml;
-  
-  if (status === 200) {
-    toast('✅ ' + data.message);
-  } else {
-    toast('❌ Erro no Sync Cloud');
-  }
-});
