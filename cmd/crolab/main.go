@@ -64,7 +64,12 @@ var runCmd = &cobra.Command{
 		}
 		bodyBytes, _ := json.Marshal(bodyReq)
 		
-		req, _ := http.NewRequest("POST", "http://localhost:8844/client/run", bytes.NewReader(bodyBytes))
+		targetCloud := cfg.CloudAPI
+		if targetCloud == "" {
+			targetCloud = "http://localhost:8844"
+		}
+		
+		req, _ := http.NewRequest("POST", targetCloud+"/client/run", bytes.NewReader(bodyBytes))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", cfg.CloudToken)
 		

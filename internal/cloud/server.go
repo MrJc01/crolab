@@ -4,6 +4,7 @@
 package cloud
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -11,14 +12,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/spf13/viper"
 	"github.com/crolab/core/web"
+	"github.com/spf13/viper"
+	"golang.org/x/net/websocket"
 )
 
 // --- Helpers ---
@@ -1158,6 +1161,9 @@ func BuildMux(webDir string) http.Handler {
 	mux.HandleFunc("/client/jobs", handleClientJobs)
 	mux.HandleFunc("/client/run", handleClientRun)
 	
+	// Phase 1 MVP Kernel (Local Host Engine)
+	mux.Handle("/client/lab/exec", websocket.Handler(handleKernelExecWS))
+	
 	// Tensors P2P (Chunked Streaming API)
 	mux.HandleFunc("/tensors/upload", handleTensorUpload)
 	mux.HandleFunc("/tensors/download/", handleTensorDownload)
@@ -1307,4 +1313,80 @@ func handleTensorDownload(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
 	http.ServeFile(w, r, targetPath)
+}
+
+// =============================================
+//  KERNEL / JUPYTER MVP
+// =============================================
+
+func handleKernelExecWS(ws *websocket.Conn) {
+	// 1. Auth check from Query String
+	token := ws.Request().URL.Query().Get("token")
+	user, err := DBGetUserByToken(token)
+	if err != nil || user == nil {
+		websocket.JSON.Send(ws, map[string]interface{}{"type": "error", "data": "Acesso não autorizado ao Kernel"})
+		return
+	}
+
+	var msg struct {
+		CellID  string `json:"cell_id"`
+		Command string `json:"command"`
+	}
+
+	// Permite múltiplos comandos por sessão (Interativo)
+	for {
+		if err := websocket.JSON.Receive(ws, &msg); err != nil {
+			break
+		}
+
+		websocket.JSON.Send(ws, map[string]interface{}{
+			"type": "status", "data": fmt.Sprintf("[Kernel] Executando Célula %s...", msg.CellID),
+			"cell_id": msg.CellID,
+		})
+
+		cwd, _ := os.Getwd()
+		cmd := exec.Command("bash", "-c", msg.Command)
+		cmd.Dir = cwd
+
+		stdout, _ := cmd.StdoutPipe()
+		stderr, _ := cmd.StderrPipe()
+
+		if err := cmd.Start(); err != nil {
+			websocket.JSON.Send(ws, map[string]interface{}{"type": "error", "data": err.Error(), "cell_id": msg.CellID})
+			continue
+		}
+
+		var wg sync.WaitGroup
+		stream := func(r *bufio.Scanner, streamType string) {
+			defer wg.Done()
+			for r.Scan() {
+				websocket.JSON.Send(ws, map[string]interface{}{
+					"type": streamType,
+					"data": r.Text() + "\n",
+					"cell_id": msg.CellID,
+				})
+			}
+		}
+
+		wg.Add(2)
+		go stream(bufio.NewScanner(stdout), "stdout")
+		go stream(bufio.NewScanner(stderr), "stderr")
+		wg.Wait()
+
+		err := cmd.Wait()
+		exitCode := 0
+		if err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				exitCode = exitErr.ExitCode()
+			} else {
+				exitCode = -1
+			}
+		}
+
+		websocket.JSON.Send(ws, map[string]interface{}{
+			"type":      "exit",
+			"exit_code": exitCode,
+			"cell_id":   msg.CellID,
+		})
+	}
 }

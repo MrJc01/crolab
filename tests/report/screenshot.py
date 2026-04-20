@@ -46,7 +46,7 @@ try:
         else:
             print("✅ Web Client utilizou SSO local_token magicamente!")
             
-        for tab in ["home", "plans", "machines", "jobs", "billing"]:
+        for tab in ["home", "plans", "machines", "jobs", "billing", "lab"]:
             print(f"Capturing Client {tab}...")
             if page.locator(f'#btn-tab-{tab}').is_visible():
                 page.click(f'#btn-tab-{tab}')

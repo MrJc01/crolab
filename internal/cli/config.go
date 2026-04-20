@@ -24,6 +24,7 @@ type ServerConfig struct {
 
 type CrolabConfig struct {
 	CloudToken    string         `mapstructure:"cloud_token"`
+	CloudAPI      string         `mapstructure:"cloud_api"`
 	DefaultServer string         `mapstructure:"default_server"`
 	Servers       []ServerConfig `mapstructure:"servers"`
 }
@@ -47,6 +48,7 @@ func InitConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		if os.IsNotExist(err) {
 			viper.Set("cloud_token", "")
+			viper.Set("cloud_api", "")
 			viper.Set("default_server", "")
 			viper.Set("servers", []ServerConfig{})
 			viper.WriteConfigAs(cfgFile)
@@ -70,6 +72,7 @@ func LoadConfig() (CrolabConfig, error) {
 
 func SaveConfig(config CrolabConfig) error {
 	viper.Set("cloud_token", config.CloudToken)
+	viper.Set("cloud_api", config.CloudAPI)
 	viper.Set("default_server", config.DefaultServer)
 	viper.Set("servers", config.Servers)
 	return viper.WriteConfigAs(cfgFile)

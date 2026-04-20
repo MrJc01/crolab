@@ -60,6 +60,17 @@ func TestGenerateReportFull(t *testing.T) {
 	// Wait for server boot
 	time.Sleep(3 * time.Second)
 
+	// 3.1 Start Lab Server for Client iframe
+	t.Log("Starting Lab server for Editor Screenshots...")
+	cmdLab := exec.Command(binPath, "lab", ".", "-p", ":19999")
+	cmdLab.Dir = "../../"
+	cmdLab.Env = crolabEnv
+	cmdLab.Start()
+	defer func() {
+		cmdLab.Process.Kill()
+	}()
+	time.Sleep(2 * time.Second)
+
 	// 3.5. Configure CLI target (needed for CLI commands)
 	t.Log("Configurando CLI para servidor local...")
 	
@@ -134,6 +145,7 @@ As imagens renderizadas capturam o dashboard renderizado com precisão Single-Bi
 
 ### Visão Headless: Mode Client
 - **Home:** ![Client Home](client_home.png)
+- **Editor Colab-Style (IDE):** ![Crolab Lab Editor](client_lab.png)
 - **Planos Contratados:** ![Client Plans](client_plans.png)
 - **Máquinas Associadas:** ![Client Machines](client_machines.png)
 - **Jobs Executados:** ![Client Jobs](client_jobs.png)

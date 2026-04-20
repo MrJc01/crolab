@@ -36,6 +36,17 @@ document.querySelectorAll('.nav-tab').forEach(btn => {
 function showPage(tab) {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   document.getElementById(tab + '-section')?.classList.remove('hidden');
+
+  const sidebar = document.querySelector('.colab-sidebar');
+  if (sidebar) {
+    if (tab === 'lab') {
+      sidebar.style.display = 'none';
+      if (typeof monacoEditor !== 'undefined' && monacoEditor) setTimeout(() => monacoEditor.layout(), 100);
+    } else {
+      sidebar.style.display = 'flex';
+    }
+  }
+
   if (tab === 'home' && TOKEN) loadHome();
   if (tab === 'settings') loadSettings();
   if (tab === 'plans') { loadClientPlans(); loadSubscription(); }
@@ -58,7 +69,15 @@ async function checkAuth() {
   document.getElementById('btn-show-auth').classList.add('hidden');
   document.querySelectorAll('.auth-only').forEach(el => el.classList.remove('hidden'));
   
-  showPage('home');
+  const hash = window.location.hash.substring(1);
+  if (hash && document.getElementById(hash + '-section')) {
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`.nav-tab[data-tab="${hash}"]`);
+    if(btn) btn.classList.add('active');
+    showPage(hash);
+  } else {
+    showPage('home');
+  }
 }
 
 async function tryLocalSSO() {
@@ -324,11 +343,227 @@ document.getElementById('btn-save-config')?.addEventListener('click', async () =
   }
 });
 
+// =============================================
+//  COLAB KERNEL ENGINE (Monaco + WebSocket)
+// =============================================
+
+let monacoEditor = null;
+let kernelWS = null;
+
+function initMonacoEditor() {
+  const container = document.getElementById('monaco-container');
+  if (!container || monacoEditor) return;
+
+  // Wait for Monaco to load from CDN
+  if (typeof monaco === 'undefined') {
+    setTimeout(initMonacoEditor, 300);
+    return;
+  }
+
+  monacoEditor = monaco.editor.create(container, {
+    value: '# Crolab Jupyter Engine — Escreva seu código aqui\nimport time\n\nfor i in range(5):\n    print(f"[Epoch {i+1}/5] Treinando modelo...")\n    time.sleep(0.3)\n\nprint("✅ Treinamento concluído!")\n',
+    language: 'python',
+    theme: 'vs-dark',
+    fontSize: 14,
+    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    automaticLayout: true,
+    padding: { top: 12, bottom: 12 },
+    lineNumbers: 'on',
+    renderLineHighlight: 'all',
+    cursorBlinking: 'smooth',
+    smoothScrolling: true,
+    wordWrap: 'on',
+    tabSize: 4,
+  });
+
+  // Ctrl+Enter shortcut to run
+  monacoEditor.addAction({
+    id: 'run-cell',
+    label: 'Run Cell',
+    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+    run: () => runClientLabCell(),
+  });
+
+  // Watch for resize events to adapt layout
+  window.addEventListener('resize', () => {
+    if (monacoEditor) monacoEditor.layout();
+  });
+}
+
+function connectKernelWS() {
+  if (kernelWS && kernelWS.readyState === WebSocket.OPEN) return kernelWS;
+
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const url = `${proto}//${window.location.host}/client/lab/exec?token=${encodeURIComponent(TOKEN)}`;
+
+  kernelWS = new WebSocket(url);
+
+  kernelWS.onopen = () => {
+    appendOutput('[Kernel] Conexão WebSocket estabelecida ✓\n', '#0f0');
+  };
+
+  kernelWS.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      switch (msg.type) {
+        case 'stdout':
+          appendOutput(msg.data, '#0f0');
+          break;
+        case 'stderr':
+          appendOutput(msg.data, '#f55');
+          break;
+        case 'status':
+          appendOutput(msg.data + '\n', '#888');
+          break;
+        case 'exit':
+          const color = msg.exit_code === 0 ? '#0f0' : '#f55';
+          appendOutput(`\n[Kernel] Processo finalizado (exit code: ${msg.exit_code})\n`, color);
+          break;
+        case 'error':
+          appendOutput(`[ERRO] ${msg.data}\n`, '#f55');
+          break;
+      }
+    } catch (e) {
+      appendOutput(event.data + '\n', '#fff');
+    }
+  };
+
+  kernelWS.onclose = () => {
+    appendOutput('[Kernel] Conexão encerrada.\n', '#888');
+    kernelWS = null;
+  };
+
+  kernelWS.onerror = () => {
+    appendOutput('[Kernel] Erro na conexão WebSocket.\n', '#f55');
+    kernelWS = null;
+  };
+
+  return kernelWS;
+}
+
+function appendOutput(text, color = '#0f0') {
+  const el = document.getElementById('lab-output');
+  if (!el) return;
+
+  const span = document.createElement('span');
+  span.style.color = color;
+  span.textContent = text;
+  el.appendChild(span);
+
+  // Auto-scroll
+  el.scrollTop = el.scrollHeight;
+}
+
+function runClientLabCell() {
+  if (!monacoEditor) { toast('Editor não inicializado'); return; }
+  if (!TOKEN) { toast('Faça login primeiro'); return; }
+
+  const code = monacoEditor.getValue();
+  if (!code.trim()) { toast('Célula vazia'); return; }
+
+  // UI Updates
+  const btnShape = document.getElementById('btn-run-cell');
+  if(btnShape) btnShape.classList.add('playing');
+  
+  // Limpa output anterior
+  const outputEl = document.getElementById('lab-output');
+  outputEl.innerHTML = '';
+  appendOutput('[Kernel] Executando célula...\n', '#9aa0a6'); // gray status
+
+  const ws = connectKernelWS();
+
+  // Escutar quando fechar para parar a animação
+  const origClose = ws.onclose;
+  ws.onclose = (ev) => {
+    if(btnShape) btnShape.classList.remove('playing');
+    if(origClose) origClose(ev);
+  };
+
+  const sendCommand = () => {
+    ws.send(JSON.stringify({
+      cell_id: 'cell_' + Date.now(),
+      command: `python3 -c ${JSON.stringify(code)}`,
+    }));
+  };
+
+  if (ws.readyState === WebSocket.OPEN) {
+    sendCommand();
+  } else {
+    ws.addEventListener('open', sendCommand, { once: true });
+  }
+}
+
+// Hook: initialize Monaco when Lab tab is shown
+const origShowPage = showPage;
+showPage = function(tab) {
+  origShowPage(tab);
+  if (tab === 'lab') {
+    setTimeout(initMonacoEditor, 200);
+  }
+};
+
 // Expose
 window.subscribePlan = subscribePlan;
 window.rentMachine = rentMachine;
 window.buyCredits = buyCredits;
+window.runClientLabCell = runClientLabCell;
 
 // Init
 if (window.lucide) lucide.createIcons();
 checkAuth();
+
+// =============================================
+//  LOCAL FILE SYSTEM API (Colab Sidebar)
+// =============================================
+async function mountLocalDrive() {
+  try {
+    const dHandle = await window.showDirectoryPicker({ mode: 'read' });
+    const tree = document.getElementById('lab-file-tree');
+    tree.innerHTML = ''; // clear mock
+    
+    // Add root marker
+    const root = document.createElement('div');
+    root.className = 'lab-tree-item';
+    root.innerHTML = `<i data-lucide="folder-open"></i> <strong>${dHandle.name}</strong>/`;
+    tree.appendChild(root);
+
+    for await (const entry of dHandle.values()) {
+      const item = document.createElement('div');
+      item.className = 'lab-tree-item';
+      
+      let icon = 'file';
+      if (entry.kind === 'directory') icon = 'folder';
+      else if (entry.name.endsWith('.py')) icon = 'file-code-2';
+      else if (entry.name.endsWith('.md')) icon = 'book-text';
+      else if (entry.name.endsWith('.json')) icon = 'file-json-2';
+
+      item.innerHTML = `<i data-lucide="${icon}"></i> ${entry.name}`;
+      tree.appendChild(item);
+    }
+    lucide.createIcons();
+    toast('Drive local montado com sucesso.');
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      toast('Erro ao acessar pasta local: ' + err.message);
+    }
+  }
+}
+
+document.getElementById('btn-mount-local-drive')?.addEventListener('click', mountLocalDrive);
+
+// Sidebar Toggle Logic
+document.getElementById('btn-toggle-main-sidebar')?.addEventListener('click', () => {
+    const sidebar = document.querySelector('.colab-sidebar');
+    if (sidebar) {
+        if (sidebar.style.display === 'none') {
+            sidebar.style.display = 'flex';
+        } else {
+            sidebar.style.display = 'none';
+        }
+        if (typeof monacoEditor !== 'undefined' && monacoEditor) {
+            setTimeout(() => monacoEditor.layout(), 100);
+        }
+    }
+});

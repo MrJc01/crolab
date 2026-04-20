@@ -311,6 +311,7 @@ As imagens renderizadas capturam o dashboard renderizado com precisão Single-Bi
 
 ### Visão Headless: Mode Client
 - **Home:** ![Client Home](client_home.png)
+- **Editor Colab-Style (IDE):** ![Crolab Lab Editor](client_lab.png)
 - **Planos Contratados:** ![Client Plans](client_plans.png)
 - **Máquinas Associadas:** ![Client Machines](client_machines.png)
 - **Jobs Executados:** ![Client Jobs](client_jobs.png)

@@ -162,25 +162,104 @@
       </section>
 
       <!-- LAB (IDE) -->
-      <section id="lab-section" class="page hidden">
-        <div class="page-header">
-          <h1>Laboratório P2P (IDE/Notebooks)</h1>
-          <button class="btn-primary" onclick="window.open('http://localhost:19999', '_blank')"><i data-lucide="external-link" style="width: 16px; margin-right: 6px; display: inline-block; vertical-align: text-bottom;"></i> Fullscreen</button>
-        </div>
+      <section id="lab-section" class="page hidden colab-layout-override">
         
-        <div class="glass-card" style="margin-bottom:1rem">
-          <h3>Navegação Dinâmica (Modo Local VS Nuvem)</h3>
-          <p style="color:var(--text-muted)">
-            <strong>Local (Colab Web Isolado):</strong> Ligue o daemon rodando no seu terminal na pasta do projeto: <code>crolab lab . --port :19999</code><br>
-            <strong>Modo Nuvem (Docker Deployment):</strong> Crolab processará as requisições, empacotará este diretório de trabalho e delegará a uma máquina alugada para execução dentro de um contêiner limpo:<br>
-          </p>
-          <div class="code-block" style="margin-top:0.75rem">
-            <code>crolab run . --image python:3.11 --machine [ID_ALVO] --cmd "python train.py"</code>
-          </div>
+        <!-- Topbar Clone -->
+        <div class="lab-topbar">
+            <div class="lab-topbar-left">
+                <i data-lucide="menu" id="btn-toggle-main-sidebar" style="color:#9aa0a6; cursor:pointer;" class="lab-hamburger"></i>
+                <div class="lab-logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5" fill="#fbbc04"/><path d="M14 8L10 16" stroke="#1f1f1f" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="8" r="1.5" fill="#1f1f1f"/><circle cx="14" cy="16" r="1.5" fill="#1f1f1f"/></svg></div>
+                <div class="lab-title-area">
+                    <div class="lab-filename">app_core.ipynb - CroLab</div>
+                    <div class="lab-menu">
+                        <span>File</span><span>Edit</span><span>View</span><span>Insert</span><span>Runtime</span><span>Tools</span><span>Help</span>
+                    </div>
+                </div>
+            </div>
+            <div class="lab-topbar-right">
+                <div class="lab-runtime-status">
+                    <div class="lab-runtime-dot"></div>
+                    Connected (GPU T4 High-RAM, Python 3)
+                </div>
+                <button class="btn-primary" style="padding: 6px 16px; border-radius: 20px; font-size: 13px;">Share</button>
+            </div>
         </div>
-        <div style="height: 65vh; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #1a1a2e">
-            <iframe src="http://localhost:19999" width="100%" height="100%" frameborder="0"></iframe>
+
+        <!-- Body Split -->
+        <div class="lab-body">
+            
+            <!-- Minimenu + File Tree -->
+            <div class="lab-sidebar-mini">
+                <i data-lucide="folder" style="color:#e8eaed"></i>
+                <i data-lucide="search"></i>
+                <i data-lucide="monitor-dot"></i>
+                <i data-lucide="file-json-2"></i>
+                <i data-lucide="info"></i>
+            </div>
+
+            <div class="lab-files-panel">
+                <div class="lab-files-header">Files
+                    <i data-lucide="x" style="width:16px;height:16px;cursor:pointer;color:#9aa0a6"></i>
+                </div>
+                <div class="lab-files-toolbar">
+                    <i data-lucide="folder-plus"></i>
+                    <i data-lucide="upload"></i>
+                    <i data-lucide="refresh-cw"></i>
+                    <button class="lab-files-toolbar-btn" id="btn-mount-local-drive"><i data-lucide="hard-drive" style="display:inline-block;vertical-align:middle;margin-right:4px;"></i>Mount Drive</button>
+                </div>
+                <div class="lab-file-tree" id="lab-file-tree">
+                    <!-- Tree Content -->
+                    <div class="lab-tree-item"><i data-lucide="folder-open"></i> sample_data/</div>
+                    <div class="lab-tree-item"><i data-lucide="file-code-2"></i> script_engine.py</div>
+                    <div class="lab-tree-item"><i data-lucide="book-text"></i> README.md</div>
+                </div>
+            </div>
+
+            <!-- Notebook Area -->
+            <div class="lab-notebook-area">
+                <div class="lab-notebook-content">
+                    
+                    <div class="notebook-toolbar">
+                        <button class="notebook-toolbar-btn"><i data-lucide="plus" style="width:14px;height:14px"></i> Code</button>
+                        <button class="notebook-toolbar-btn"><i data-lucide="plus" style="width:14px;height:14px"></i> Text</button>
+                    </div>
+
+                    <!-- Single Interactive Cell -->
+                    <div class="colab-cell-wrapper" id="primary-cell">
+                        <div class="cell-floating-actions">
+                            <i data-lucide="arrow-up"></i>
+                            <i data-lucide="arrow-down"></i>
+                            <i data-lucide="link"></i>
+                            <i data-lucide="message-square"></i>
+                            <i data-lucide="trash-2"></i>
+                            <i data-lucide="more-vertical"></i>
+                        </div>
+
+                        <div class="colab-cell-main">
+                            <div class="colab-cell-gutter">
+                                <div class="play-btn-circle" onclick="runClientLabCell()" id="btn-run-cell">
+                                    <i data-lucide="play" fill="currentColor"></i>
+                                </div>
+                            </div>
+                            <div class="colab-cell-editor">
+                                <!-- Monaco injects here -->
+                                <div id="monaco-container" class="colab-monaco-mount"></div>
+                            </div>
+                        </div>
+
+                        <div class="colab-cell-output-wrapper">
+                            <div class="colab-output-gutter">
+                                <i data-lucide="corner-down-right" class="out-indicator"></i>
+                            </div>
+                            <div class="colab-output-content" id="lab-output"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
+
       </section>
 
       <!-- BILLING -->
@@ -225,6 +304,15 @@
 </div>
 
 <div id="toast" class="toast hidden"></div>
+<!-- Monaco Editor Loader CDN -->
+<script>var require = { paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs' } };</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs/loader.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs/editor/editor.main.nls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs/editor/editor.main.js"></script>
+
 <script src="client.js"></script>
+<script>
+    lucide.createIcons();
+</script>
 </body>
 </html>
