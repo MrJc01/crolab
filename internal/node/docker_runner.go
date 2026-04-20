@@ -1,7 +1,11 @@
+// Copyright (c) 2026 Crolab Contributors. All rights reserved.
+// Licensed under the Crolab Sustainable License (CSL).
+// Contact: mrj.crom@gmail.com
 package node
 
 import (
 	"archive/zip"
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -12,47 +16,113 @@ import (
 	"strings"
 )
 
-func RunDockerJob(jobID string, imageRef string, cmdStr string, payload []byte) error {
-	// 1. Setup do Workspace Base
-	workspace := filepath.Join(os.TempDir(), "crolab", jobID)
-	os.MkdirAll(workspace, 0755)
+// UnzipDir extracts a zip payload into destDir.
+// Includes ZipSlip protection.
+func UnzipDir(payload []byte, destDir string) error {
+	zipReader, err := zip.NewReader(bytes.NewReader(payload), int64(len(payload)))
+	if err != nil {
+		return err
+	}
 
-	if len(payload) > 0 {
-		zipReader, err := zip.NewReader(bytes.NewReader(payload), int64(len(payload)))
-		if err == nil {
-			for _, f := range zipReader.File {
-				p := filepath.Join(workspace, f.Name)
-				// Proteção SRE ZipSlip O(1)
-				if !strings.HasPrefix(p, filepath.Clean(workspace)+string(os.PathSeparator)) {
-					continue
-				}
-				if f.FileInfo().IsDir() {
-					os.MkdirAll(p, f.Mode())
-					continue
-				}
-				os.MkdirAll(filepath.Dir(p), 0755)
-				dst, _ := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-				src, _ := f.Open()
-				io.Copy(dst, src)
-				dst.Close()
-				src.Close()
-			}
+	for _, f := range zipReader.File {
+		fpath := filepath.Join(destDir, f.Name)
+
+		// ZipSlip guard
+		if !strings.HasPrefix(filepath.Clean(fpath), filepath.Clean(destDir)+string(os.PathSeparator)) {
+			return fmt.Errorf("caminho suspeito no zip (zipslip): %s", f.Name)
+		}
+
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(fpath, os.ModePerm)
+			continue
+		}
+
+		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+			return err
+		}
+
+		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		if err != nil {
+			return err
+		}
+
+		rc, err := f.Open()
+		if err != nil {
+			outFile.Close()
+			return err
+		}
+
+		_, err = io.Copy(outFile, rc)
+		outFile.Close()
+		rc.Close()
+
+		if err != nil {
+			return err
 		}
 	}
+	return nil
+}
 
-	// 2. Acionar CLI do Docker (Gerenciamento Padrão/Normal SRE)
-	log.Printf("Iniciando Docker run via Raw CLI para a imagem: %s", imageRef)
-	
-	cmd := exec.Command("docker", "run", "--rm", "-v", fmt.Sprintf("%s:/workspace", workspace), "-w", "/workspace", imageRef, "sh", "-c", cmdStr)
-	
-	// Acoplando Saída Standard aos Sockets do Host para Streaming
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+// RunDockerJob creates a workspace, unzips the payload, runs Docker, and
+// streams real stdout/stderr into logChan for the gRPC StreamLogs consumer.
+func RunDockerJob(jobID, imageRef, cmdStr string, payload []byte, logChan chan<- string) error {
+	workspace := filepath.Join(os.TempDir(), "crolab_jobs", jobID)
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("O Container falhou ou obteve Exception TTY: %v", err)
+	if err := os.MkdirAll(workspace, 0755); err != nil {
+		return fmt.Errorf("não conseguiu criar workspace: %v", err)
 	}
 
-	log.Printf("Processo Crolab [%s] consolidado com sucesso natural.", jobID)
+	if err := UnzipDir(payload, workspace); err != nil {
+		return fmt.Errorf("falha ao descompactar payload: %v", err)
+	}
+
+	log.Printf("⚙️  Docker run: image=%s cmd=%s workspace=%s", imageRef, cmdStr, workspace)
+
+	cmdConfig := []string{
+		"run", "--rm",
+		"--cpus", "2.0",
+		"--memory", "4g",
+		"-v", fmt.Sprintf("%s:/workspace", workspace),
+		"-w", "/workspace",
+		imageRef,
+		"sh", "-c", cmdStr,
+	}
+
+	cmd := exec.Command("docker", cmdConfig...)
+
+	// Capture stdout and stderr via pipes → logChan
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("falha ao criar pipe stdout: %v", err)
+	}
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("falha ao criar pipe stderr: %v", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("falha ao iniciar container: %v", err)
+	}
+
+	// Stream both stdout and stderr into logChan
+	go func() {
+		scanner := bufio.NewScanner(stdoutPipe)
+		for scanner.Scan() {
+			logChan <- scanner.Text() + "\n"
+		}
+	}()
+	go func() {
+		scanner := bufio.NewScanner(stderrPipe)
+		for scanner.Scan() {
+			logChan <- "[stderr] " + scanner.Text() + "\n"
+		}
+	}()
+
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("container terminou com erro: %v", err)
+	}
+
+	// Cleanup workspace
+	_ = os.RemoveAll(workspace)
 	return nil
 }

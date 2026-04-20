@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Crolab Contributors. All rights reserved.
+// Licensed under the Crolab Sustainable License (CSL).
+// Contact: mrj.crom@gmail.com
 package cli
 
 import (
@@ -9,8 +12,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
@@ -18,15 +23,26 @@ import (
 )
 
 // SubmitJob packs the current dir and sends to grpc node
-func SubmitJob(serverAddr, token, image, command, targetDir string) error {
+func SubmitJob(serverAddr, token, image, command, targetDir string, useTls bool) error {
 	payload, err := ZipDir(targetDir)
 	if err != nil {
 		return fmt.Errorf("falha ao comprimir workspace %s: %v", targetDir, err)
 	}
 
-	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	creds := insecure.NewCredentials()
+	if useTls {
+		creds = credentials.NewClientTLSFromCert(nil, "")
+	}
+
+	dialCtx, dialCancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer dialCancel()
+
+	conn, err := grpc.DialContext(dialCtx, serverAddr, 
+		grpc.WithTransportCredentials(creds), 
+		grpc.WithBlock(),
+	)
 	if err != nil {
-		return fmt.Errorf("bloqueio de rede conectando Node: %v", err)
+		return fmt.Errorf("node offline ou restrito: %v", err)
 	}
 	defer conn.Close()
 
@@ -39,8 +55,10 @@ func SubmitJob(serverAddr, token, image, command, targetDir string) error {
 		Payload: payload,
 	}
 
-	// Adentra Auth Metadados
-	ctx := context.Background()
+	// Adentra Auth Metadados e Timeout Rápido
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	if token != "" {
 		ctx = metadata.AppendToOutgoingContext(ctx, "authorization", token)
 	}
