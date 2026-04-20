@@ -40,7 +40,10 @@ func startTestServer(t *testing.T) string {
 
 func post(url string, body map[string]interface{}) (*http.Response, map[string]interface{}) {
 	b, _ := json.Marshal(body)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(b))
+	req, _ := http.NewRequest("POST", url, bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Forwarded-For", fmt.Sprintf("10.0.0.%d", time.Now().UnixNano()%254+1))
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return &http.Response{StatusCode: 503}, map[string]interface{}{"error": err.Error()}
 	}

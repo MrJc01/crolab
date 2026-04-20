@@ -160,7 +160,10 @@ func TestE2EFullFlow(t *testing.T) {
 func postJSON(t *testing.T, url string, body map[string]interface{}) (*http.Response, map[string]interface{}) {
 	t.Helper()
 	b, _ := json.Marshal(body)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(b))
+	req, _ := http.NewRequest("POST", url, bytes.NewReader(b))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Forwarded-For", fmt.Sprintf("192.168.1.%d", time.Now().UnixNano()%254+1))
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("POST %s: %v", url, err)
 	}
