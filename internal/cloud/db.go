@@ -635,10 +635,16 @@ func DBGetStats() map[string]interface{} {
 		"total_spread":   0.0,
 	}
 
-	db.QueryRow("SELECT COUNT(*) FROM users").Scan(&stats["total_users"])
-	db.QueryRow("SELECT COUNT(*) FROM machines").Scan(&stats["total_machines"])
-	db.QueryRow("SELECT COUNT(*) FROM plans").Scan(&stats["total_plans"])
-	db.QueryRow("SELECT COUNT(*) FROM jobs WHERE status = 'running'").Scan(&stats["active_jobs"])
+	var totUsers, totMachines, totPlans, activeJobs int
+	db.QueryRow("SELECT COUNT(*) FROM users").Scan(&totUsers)
+	db.QueryRow("SELECT COUNT(*) FROM machines").Scan(&totMachines)
+	db.QueryRow("SELECT COUNT(*) FROM plans").Scan(&totPlans)
+	db.QueryRow("SELECT COUNT(*) FROM jobs WHERE status = 'running'").Scan(&activeJobs)
+
+	stats["total_users"] = totUsers
+	stats["total_machines"] = totMachines
+	stats["total_plans"] = totPlans
+	stats["active_jobs"] = activeJobs
 
 	// Revenue Calculation (Total Costs Charged to Users)
 	var rev float64

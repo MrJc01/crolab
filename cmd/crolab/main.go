@@ -248,15 +248,16 @@ func init() {
 }
 
 func main() {
-	rootCmd.AddCommand(serveCmd)
+	// Root and Client Commands
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(monitorCmd)
-	rootCmd.AddCommand(labCmd)
 	rootCmd.AddCommand(configCmd)
-	rootCmd.AddCommand(authCmd)
-	rootCmd.AddCommand(billingCmd)
-	rootCmd.AddCommand(cloudServeCmd)
-	rootCmd.AddCommand(statusCmd_)
+	
+	// Phase 3.0 Architecture Commands (SRE/Providers/Web)
+	rootCmd.AddCommand(providerCmd)
+	rootCmd.AddCommand(webCmd)
+	rootCmd.AddCommand(dbCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
