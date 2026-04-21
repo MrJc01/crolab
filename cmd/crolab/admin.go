@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
@@ -211,14 +212,25 @@ func init() {
 
 // --- HTTP Helpers ---
 
+func formatAdminServer(server string) string {
+	if !strings.HasPrefix(server, "http://") && !strings.HasPrefix(server, "https://") {
+		return "http://" + server
+	}
+	return server
+}
+
 func adminGet(path, token string) interface{} {
-	req, _ := http.NewRequest("GET", adminServer+path, nil)
+	req, err := http.NewRequest("GET", formatAdminServer(adminServer)+path, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "❌ Erro preparando requisição: %v\n", err)
+		return nil
+	}
 	if token != "" {
 		req.Header.Set("Authorization", token)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "❌ Erro: %v\n", err)
+		fmt.Fprintf(os.Stderr, "❌ Erro conectando: %v\n", err)
 		return nil
 	}
 	defer resp.Body.Close()
@@ -236,14 +248,18 @@ func adminGet(path, token string) interface{} {
 
 func adminPost(path, token string, data map[string]interface{}) map[string]interface{} {
 	b, _ := json.Marshal(data)
-	req, _ := http.NewRequest("POST", adminServer+path, bytes.NewReader(b))
+	req, err := http.NewRequest("POST", formatAdminServer(adminServer)+path, bytes.NewReader(b))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "❌ Erro preparando requisição: %v\n", err)
+		return nil
+	}
 	req.Header.Set("Content-Type", "application/json")
 	if token != "" {
 		req.Header.Set("Authorization", token)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "❌ Erro: %v\n", err)
+		fmt.Fprintf(os.Stderr, "❌ Erro conectando: %v\n", err)
 		return nil
 	}
 	defer resp.Body.Close()
@@ -258,7 +274,11 @@ func adminPost(path, token string, data map[string]interface{}) map[string]inter
 }
 
 func adminDelete(path, token string) {
-	req, _ := http.NewRequest("DELETE", adminServer+path, nil)
+	req, err := http.NewRequest("DELETE", formatAdminServer(adminServer)+path, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "❌ Erro preparando requisição: %v\n", err)
+		return
+	}
 	if token != "" {
 		req.Header.Set("Authorization", token)
 	}
