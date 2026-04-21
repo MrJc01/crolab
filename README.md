@@ -3,26 +3,26 @@
 Bem-vindo ao repositório oficial do **Crolab**, um poderoso ambiente modular P2P projetado para revolucionar O custo de execução de Modelos de Linguagem e processamento científico denso (Machine Learning) conectando locadores e provedores de Hardware.
 
 Ele embute nativamente ferramentas como:
-- **Web Client App (Estilo Google Colab)** na sua máquina.
-- **Micro-Gateway Proxy Reverso** que isola processamento.
-- **Node Provider Mode (Geração de Renda)** para locar sua GPU idle Ociosamente.
+- **Cloud Central & Client Dashboard** com interface Vanilla Glassmorphism P2P.
+- **Kernel Sandbox Nativo** provendo container isolation SRE para Node/Python.
+- **Micro-Gateway P2P (Node Provider Mode)** gerido em Go para emissão e recebimento de Payload em massa.
 
 ---
 
-## 🚀 Como Fazer o Download (Releases)
+## 🚀 Como Fazer o Download e Instalar (Gold Master Release)
 
-O Crolab possui Builds nativos atualizados em Tempo Real pelos nossos pipelines do GitHub Actions (para Mac, Windows e Linux).
-Para instalar e começar a usar as maravilhas da interface visual:
+O Crolab convergiu todo seu motor (UI Web, Painel Administrativo CLI, Banco SQLite SRE e gRPC TLS Protocol) dentro de um binário autônomo único sem necessidade de frameworks pesados de retaguarda (*Go Embed Core*).
 
+Você pode instalá-lo de forma autônoma pela linha de comando em Servidores Nuvem Linux ou Local Mac via:
+```bash
+curl -sSL https://crolab.crom.run/install | bash
+```
+
+Se desejar instalação via binários diretos `.zip` / `.exe`:
 1. **Vá na aba "Releases"** no canto direito deste repositório no GitHub.
-2. Expanda os botões em `Assets`.
-3. Faça o download da versão Zip do seu Sistema Operacional — ex: `crolab-windows-amd64.zip`.
-4. Extraia a pasta, abra um terminal apontado ali e digite:
-   `crolab web` (Poderosa UI Cliente estilo Colab) ou `crolab serve` (Hospedar sua GPU).
-
----
-
-## 📚 Super Índice Oficial da Plataforma (Sumário)
+2. Faça o download da versão Zip do seu Sistema — ex: `crolab-linux-amd64.zip`.
+3. Extraia o executável e digite no terminal para inicializar toda a Trindade Orquestradora na Porta Web/API em segundos:
+   `crolab provider start`
 
 Criamos uma Árvore Hierárquica completa para você navegar linearmente e explorar este software a fundo de modo seguro, podendo ir e voltar entre os tópicos a qualquer instante.
 
