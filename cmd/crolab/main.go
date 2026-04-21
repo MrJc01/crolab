@@ -252,12 +252,19 @@ func main() {
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(monitorCmd)
 	rootCmd.AddCommand(configCmd)
-	
-	// Phase 3.0 Architecture Commands (SRE/Providers/Web)
-	rootCmd.AddCommand(providerCmd)
-	rootCmd.AddCommand(webCmd)
-	rootCmd.AddCommand(dbCmd)
-	rootCmd.AddCommand(versionCmd)
+
+	// Commands registered via init() in their own files:
+	// providerCmd (provider.go), webCmd (web.go), dbCmd (db.go),
+	// versionCmd (version.go), adminCmd (admin.go),
+	// plansCmd/subscribeCmd/myMachinesCmd/connectCmd (client.go)
+
+	// Commands defined in their files but not auto-registered:
+	rootCmd.AddCommand(serveCmd)
+	rootCmd.AddCommand(authCmd)
+	rootCmd.AddCommand(billingCmd)
+	rootCmd.AddCommand(statusCmd_)
+	rootCmd.AddCommand(cloudServeCmd)
+	rootCmd.AddCommand(labCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

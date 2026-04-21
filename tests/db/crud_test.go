@@ -33,7 +33,7 @@ func TestUserCRUD(t *testing.T) {
 
 	// Create
 	rawPass := "senha123"
-	err := cloud.DBCreateUser("crud@test.com", rawPass, "client", "10.0.0.1")
+	_, err := cloud.DBCreateUser("crud@test.com", rawPass, "client", "10.0.0.1")
 	if err != nil {
 		t.Fatalf("Falhou ao criar user: %v", err)
 	}
@@ -56,11 +56,14 @@ func TestUserCRUD(t *testing.T) {
 		t.Errorf("Esperava 120.5 creditos, obteve: %f", u2.Credits)
 	}
 
-	// Delete
+	// Delete (soft-delete: role → 'disabled')
 	_ = cloud.DBDeleteUser(u.ID)
 	u3, err := cloud.DBGetUserByEmail("crud@test.com")
-	if err == nil || u3 != nil {
-		t.Fatalf("DeleteUser falhou, usuário ainda existe.")
+	if err != nil || u3 == nil {
+		t.Fatalf("Soft-delete falhou ao buscar user: %v", err)
+	}
+	if u3.Role != "disabled" {
+		t.Fatalf("Esperava role='disabled' após soft-delete, obteve: %s", u3.Role)
 	}
 }
 
