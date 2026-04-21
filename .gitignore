@@ -5,17 +5,29 @@
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
-*.test
+# O Binário Local da Raiz do projeto e Temp builds pesadas
+/crolab
+/test-bin
+dist/
+build/
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Node environment lixos massivos ("Os 9000 arquivos")
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Caches Pycharm e Python tests massivos
+__pycache__/
+.pytest_cache/
+tests/reports/
+
+# IDE files originais mortos ("Os backups sujos")
+*.orig
+*.bak
+*.swp
+
+# Output of the go coverage tool
 *.out
-
-# Dependency directories (using Go modules)
-vendor/
-
-# Crolab Specific Built Binary
-crolab
 
 # Database / SQLite state files
 *.db
@@ -25,11 +37,14 @@ crolab
 *.db-wal
 .test_*.db
 
-# Crolab Runtimes and Logs
-scratch/
-provider.pid
+# Crolab Runtimes, Logs e Temp files
+/provider.log
+/server.log
+/server_log.txt
+/tmp_e2e_run.log
+/provider.pid
+/scratch/
 *.log
-server_log.txt
 *.zip
 *.tar.gz
 
@@ -42,5 +57,7 @@ server_log.txt
 .idea/
 .vscode/
 
-# Ignore test temp files but NOT documentation files
-scratch_test.py
+# Meta Plans do Agente e documentações locais exclusivas
+implementation_plan.md
+implementation_plan.md.resolved
+/scratch_test.py
