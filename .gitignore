@@ -1,54 +1,46 @@
-# ==================================
-# CROLAB — Repositório Sanitizado
-# ==================================
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
-# Build / Compilados / Binários
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (using Go modules)
+vendor/
+
+# Crolab Specific Built Binary
 crolab
-crolab.exe
-test-bin
-bin/
-build/
-dist/
 
-# Relatórios de Teste (Gerados Dinamicamente)
-tests/reports/
-reports/
-
-# Python
-.pytest_cache/
-__pycache__/
-*.pyc
-
-# Golang / SQLite Database
-crolab.db
-crolab.db-journal
-crolab.db-shm
-crolab.db-wal
-
-# Ambiente / Config Local
-.crolab/
-
-# Logs
-server.log
-*.log
-
-# Node / NPM (SDK Frontend)
-node_modules/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Local Logs & Scripts
-provider.pid
-server_log.txt
-scratch/
-scratch_test.py
-implementation_plan.md
-implementation_plan.md.resolved
+# Database / SQLite state files
 *.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
 .test_*.db
+
+# Crolab Runtimes and Logs
+scratch/
+provider.pid
+*.log
+server_log.txt
+*.zip
+*.tar.gz
+
+# Environment variables
+.env
+.env.local
+
+# IDEs and OS Metafiles
+.DS_Store
+.idea/
+.vscode/
+
+# Ignore test temp files but NOT documentation files
+scratch_test.py
