@@ -17,6 +17,8 @@ interface NotebookState {
   deleteCell: (id: string) => void;
   moveCell: (id: string, direction: 'up' | 'down') => void;
   loadNotebook: () => Promise<void>;
+  clearAllOutputs: () => void;
+  clearAllCells: () => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -68,6 +70,14 @@ export const useNotebookStore = create<NotebookState>((set_, get_) => {
     
     return { cells: newCells };
     }),
+
+    clearAllOutputs: () => setAndSave((state) => ({
+      cells: state.cells.map(c => ({ ...c, output: undefined, status: 'idle' }))
+    })),
+
+    clearAllCells: () => setAndSave(() => ({
+      cells: [{ id: generateId(), type: 'code', content: '', status: 'idle' }]
+    })),
 
     loadNotebook: async () => {
       try {
