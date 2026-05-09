@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'crolab-gateway'
+    static_configs:
+      - targets: ['gateway:9090']
+  
+  - job_name: 'crolab-firecracker-nodes'
+    # Descobre dinamicamente os endpoints das microVMs pelo Kubernetes
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: crolab-kernel
