@@ -1,7 +1,8 @@
 import React from 'react';
 import Editor from '@monaco-editor/react';
 import { Play, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
-import { Cell as CellType, useNotebookStore } from '../store/notebookStore';
+import { useNotebookStore } from '../store/notebookStore';
+import type { Cell as CellType } from '../store/notebookStore';
 
 interface CellProps {
   cell: CellType;

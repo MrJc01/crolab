@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNotebookStore } from './store/notebookStore';
 import { Cell } from './components/Cell';
 import { Plus } from 'lucide-react';

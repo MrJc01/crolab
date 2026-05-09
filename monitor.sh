@@ -10,10 +10,11 @@ NC='\033[0m' # No Color
 # Função para matar subprocessos no exit
 cleanup() {
     echo -e "\n${RED}🛑 Encerrando todos os processos do Crolab...${NC}"
-    # Mata os processos iniciados pelos filhos
-    pkill -f "python3 kernel.py"
-    pkill -f "cmd/crolab-v3/main.go"
-    pkill -f "npm run dev"
+    # Derruba as portas em vez dos nomes de processo (para matar binários compilados em Go)
+    fuser -k 5555/tcp 2>/dev/null
+    fuser -k 8080/tcp 2>/dev/null
+    fuser -k 5173/tcp 2>/dev/null
+    pkill -f "npm run dev" 2>/dev/null
     exit 0
 }
 
